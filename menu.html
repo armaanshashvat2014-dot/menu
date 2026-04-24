@@ -8,7 +8,7 @@
 <style>
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: Poppins, sans-serif;
   background: linear-gradient(135deg, #f97316, #ea580c);
   color: white;
 }
@@ -20,7 +20,7 @@ body {
   font-weight: bold;
 }
 
-.menu-container {
+.menu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
@@ -33,7 +33,7 @@ body {
   overflow: hidden;
   text-align: center;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: 0.3s;
 }
 
 .card:hover {
@@ -46,103 +46,93 @@ body {
   object-fit: cover;
 }
 
-.card h3 {
-  margin: 10px 0 5px;
-}
-
-.card p {
-  font-size: 14px;
-  padding: 0 10px 15px;
-}
-
-/* Modal */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.7);
   display: none;
   justify-content: center;
   align-items: center;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
 }
 
 .modal-box {
   background: #1e293b;
   padding: 20px;
   border-radius: 15px;
-  width: 300px;
   text-align: center;
+  width: 300px;
 }
 
-.modal-box input, select {
+input, select {
   width: 80%;
   padding: 8px;
-  margin: 10px 0;
+  margin: 10px;
   border-radius: 8px;
   border: none;
 }
 
 button {
-  padding: 10px 15px;
+  padding: 10px;
+  margin: 5px;
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  margin: 5px;
 }
 
-.buy-btn {
+.buy { background: #22c55e; color: white; }
+.close { background: #ef4444; color: white; }
+
+.view-orders {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
   background: #22c55e;
+  padding: 12px 18px;
+  border-radius: 10px;
   color: white;
-}
-
-.close-btn {
-  background: #ef4444;
-  color: white;
+  text-decoration: none;
 }
 </style>
-
 </head>
 
 <body>
 
-<div class="header">🍽️ Our Menu</div>
+<div class="header">🍽️ Menu</div>
 
-<div class="menu-container">
+<div class="menu">
+  <div class="card" onclick="openModal('Burger',120)">
+    <img src="burger.gif">
+    <h3>Burger</h3>
+    <p>₹120</p>
+  </div>
 
- <!-- ONLY showing changed part -->
+  <div class="card" onclick="openModal('Pizza',250)">
+    <img src="pizza.gif">
+    <h3>Pizza</h3>
+    <p>₹250</p>
+  </div>
 
-<div class="card" onclick="openModal('Burger', 120)">
-  <img src="burger.gif">
-  <h3>Burger</h3>
-  <p>₹120</p>
-</div>
+  <div class="card" onclick="openModal('Pasta',180)">
+    <img src="pasta.gif">
+    <h3>Pasta</h3>
+    <p>₹180</p>
+  </div>
 
-<div class="card" onclick="openModal('Pizza', 250)">
-  <img src="pizza.gif">
-  <h3>Pizza</h3>
-  <p>₹250</p>
-</div>
+  <div class="card" onclick="openModal('Sandwich',100)">
+    <img src="sandwich.gif">
+    <h3>Sandwich</h3>
+    <p>₹100</p>
+  </div>
 
-<div class="card" onclick="openModal('Pasta', 180)">
-  <img src="pasta.gif">
-  <h3>Pasta</h3>
-  <p>₹180</p>
-</div>
-
-<div class="card" onclick="openModal('Sandwich', 100)">
-  <img src="sandwich.gif">
-  <h3>Sandwich</h3>
-  <p>₹100</p>
-</div>
-
-<div class="card" onclick="openModal('Dessert', 90)">
-  <img src="desert.gif">
-  <h3>Dessert</h3>
-  <p>₹90</p>
-</div>
-
+  <div class="card" onclick="openModal('Dessert',90)">
+    <img src="dessert.gif">
+    <h3>Dessert</h3>
+    <p>₹90</p>
+  </div>
 </div>
 
 <!-- MODAL -->
@@ -150,40 +140,68 @@ button {
   <div class="modal-box">
     <h2 id="foodName"></h2>
 
-    <label>Quantity:</label><br>
-    <input type="number" id="qty" value="1" min="1" onchange="updatePrice()">
+    <input type="number" id="qty" value="1" min="1">
 
-    <label>Combo:</label><br>
-    <select id="combo" onchange="updatePrice()">
-      <option value="0">None</option>
+    <select id="combo">
+      <option value="0">No Combo</option>
       <option value="50">Fries + Coke (+₹50)</option>
       <option value="80">Full Combo (+₹80)</option>
     </select>
 
-    <h3 id="totalPrice">Total: ₹0</h3>
+    <h3 id="total">₹0</h3>
 
-    <button class="buy-btn" onclick="buy()">Buy</button>
-    <button class="close-btn" onclick="closeModal()">Close</button>
+    <button class="buy" onclick="buy()">Buy</button>
+    <button class="close" onclick="closeModal()">Close</button>
   </div>
 </div>
+
+<a href="orders.html" class="view-orders">Orders</a>
+
 <script>
+let currentPrice = 0;
+let currentFood = "";
+
+function openModal(name, price) {
+  currentFood = name;
+  currentPrice = price;
+
+  document.getElementById("foodName").innerText = name;
+  document.getElementById("qty").value = 1;
+  document.getElementById("combo").value = 0;
+
+  document.getElementById("modal").style.display = "flex";
+
+  updateTotal();
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+document.getElementById("qty").oninput = updateTotal;
+document.getElementById("combo").onchange = updateTotal;
+
+function updateTotal() {
+  const qty = parseInt(document.getElementById("qty").value) || 1;
+  const combo = parseInt(document.getElementById("combo").value) || 0;
+
+  const total = (currentPrice * qty) + combo;
+  document.getElementById("total").innerText = "₹" + total;
+}
+
 function generateOTP() {
-  return Math.floor(1000 + Math.random() * 9000); // 4-digit
+  return Math.floor(1000 + Math.random() * 9000);
 }
 
 function buy() {
   const name = prompt("Enter your name:");
   const address = prompt("Enter your address:");
-  const phone = prompt("Enter your phone number:");
+  const phone = prompt("Enter phone:");
 
   if (!name || !address || !phone) {
-    alert("Please fill all details!");
+    alert("Fill all details");
     return;
   }
-
-  const qty = parseInt(document.getElementById("qty").value);
-  const combo = document.getElementById("combo").selectedOptions[0].text;
-  const total = document.getElementById("totalPrice").innerText;
 
   let orders = JSON.parse(localStorage.getItem("orders")) || [];
 
@@ -196,18 +214,19 @@ function buy() {
     address,
     phone,
     food: currentFood,
-    quantity: qty,
-    combo,
-    total,
+    quantity: document.getElementById("qty").value,
+    combo: document.getElementById("combo").selectedOptions[0].text,
+    total: document.getElementById("total").innerText,
     status: "Pending",
     otp: otp
   });
 
   localStorage.setItem("orders", JSON.stringify(orders));
 
-  alert("Order placed! Your OTP is: " + otp); // simulate SMS
+  alert("Order placed! OTP: " + otp);
   closeModal();
 }
 </script>
+
 </body>
 </html>
