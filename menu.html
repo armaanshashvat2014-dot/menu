@@ -167,39 +167,17 @@ button {
   </div>
 </div>
 <script>
-let currentPrice = 0;
-let currentFood = "";
-
-function openModal(name, price) {
-  document.getElementById("modal").style.display = "flex";
-  document.getElementById("foodName").innerText = name;
-  document.getElementById("qty").value = 1;
-  document.getElementById("combo").value = 0;
-
-  currentPrice = price;
-  currentFood = name;
-
-  updatePrice();
-}
-
-function closeModal() {
-  document.getElementById("modal").style.display = "none";
-}
-
-function updatePrice() {
-  const qty = parseInt(document.getElementById("qty").value);
-  const combo = parseInt(document.getElementById("combo").value);
-
-  const total = (currentPrice * qty) + combo;
-  document.getElementById("totalPrice").innerText = "Total: ₹" + total;
+function generateOTP() {
+  return Math.floor(1000 + Math.random() * 9000); // 4-digit
 }
 
 function buy() {
   const name = prompt("Enter your name:");
   const address = prompt("Enter your address:");
+  const phone = prompt("Enter your phone number:");
 
-  if (!name || !address) {
-    alert("Please fill details!");
+  if (!name || !address || !phone) {
+    alert("Please fill all details!");
     return;
   }
 
@@ -209,23 +187,25 @@ function buy() {
 
   let orders = JSON.parse(localStorage.getItem("orders")) || [];
 
-  // Limit to 10 orders
-  if (orders.length >= 10) {
-    orders.shift(); // remove oldest
-  }
+  if (orders.length >= 10) orders.shift();
+
+  const otp = generateOTP();
 
   orders.push({
     name,
     address,
+    phone,
     food: currentFood,
     quantity: qty,
     combo,
-    total
+    total,
+    status: "Pending",
+    otp: otp
   });
 
   localStorage.setItem("orders", JSON.stringify(orders));
 
-  alert("Order saved! 🎉");
+  alert("Order placed! Your OTP is: " + otp); // simulate SMS
   closeModal();
 }
 </script>
