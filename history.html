@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>History</title>
+<style>
+body { font-family:Poppins; background:#111; color:white; text-align:center; }
+.item { background:#222; margin:10px; padding:10px; border-radius:10px; }
+</style>
+</head>
+
+<body>
+
+<h2>📜 Delivery History</h2>
+
+<div id="list"></div>
+
+<script>
+let history=JSON.parse(localStorage.getItem("history"))||[];
+
+document.getElementById("list").innerHTML =
+  history.length===0 ? "<p>No history</p>" :
+  history.map(h=>`
+    <div class="item">
+      <h3>${h.food}</h3>
+      <p>${h.name}</p>
+      <p>${h.total}</p>
+      <p>Delivered</p>
+    </div>
+  `).join("");
+</script>
+
+</body>
+</html>
