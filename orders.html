@@ -1,99 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Orders</title>
+<title>Agent Panel</title>
 
 <style>
-body { font-family: Poppins; background:#020617; color:white; margin:0; }
-.header { text-align:center; padding:20px; background:#0f172a; }
-.container { padding:20px; }
+body { font-family:Poppins; background:#020617; color:white; margin:0; }
+
+.login {
+  display:flex; justify-content:center; align-items:center;
+  height:100vh;
+}
+
+.box {
+  background:#111; padding:20px; border-radius:10px; text-align:center;
+}
 
 .order {
-  background:rgba(255,255,255,0.08);
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
+  background:#111; margin:10px; padding:10px; border-radius:10px;
 }
 
-button {
-  margin-top:8px;
-  padding:8px 12px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-.out { background:#facc15; }
-.delivered { background:#22c55e; }
+button { padding:8px; margin:5px; }
 </style>
 </head>
 
 <body>
 
-<div class="header">🚚 Delivery Panel</div>
-<div class="container" id="ordersList"></div>
+<!-- LOGIN -->
+<div id="loginPage" class="login">
+  <div class="box">
+    <h2>🚚 Agent Login</h2>
+    <input id="agentName" placeholder="Enter your name"><br>
+    <button onclick="login()">Enter</button>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div id="panel" style="display:none;">
+  <h2 style="text-align:center;">📦 Your Orders</h2>
+  <div id="list"></div>
+</div>
 
 <script>
-function loadOrders() {
-  const orders = JSON.parse(localStorage.getItem("orders")) || [];
-  const container = document.getElementById("ordersList");
-  container.innerHTML = "";
+let currentAgent = "";
 
-  if (orders.length === 0) {
-    container.innerHTML = "<p>No orders yet.</p>";
+function login() {
+  const name = document.getElementById("agentName").value;
+
+  if (!name) return alert("Enter name");
+
+  const agents = JSON.parse(localStorage.getItem("agents")) || [];
+
+  if (!agents.includes(name)) {
+    alert("Agent not found ❌");
     return;
   }
 
-  orders.forEach((order, index) => {
-    const div = document.createElement("div");
-    div.className = "order";
+  currentAgent = name;
+  localStorage.setItem("loggedAgent", name);
 
-    // Safe fallback (in case old orders don't have fields)
-    const combo = order.combo || "None";
-    const total = order.total || "₹0";
-    const qty = order.quantity || 1;
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("panel").style.display = "block";
 
-    div.innerHTML = `
-      <h3>${order.food}</h3>
-      <p><b>Name:</b> ${order.name}</p>
-      <p><b>Phone:</b> ${order.phone}</p>
-      <p><b>Quantity:</b> ${qty}</p>
-      <p><b>Combo:</b> ${combo}</p>
-      <p><b>Total:</b> ${total}</p>
-      <p><b>Status:</b> ${order.status}</p>
+  load();
+}
 
-      <button class="out" onclick="markOut(${index})">Out for Delivery</button>
-      <button class="delivered" onclick="deliver(${index})">Delivered</button>
-    `;
+// auto login if already saved
+window.onload = () => {
+  const saved = localStorage.getItem("loggedAgent");
+  if (saved) {
+    currentAgent = saved;
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("panel").style.display = "block";
+    load();
+  }
+};
 
-    container.appendChild(div);
+function load() {
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  // 🔥 FILTER ONLY THIS AGENT
+  const myOrders = orders.filter(o => o.assignedTo === currentAgent);
+
+  if (myOrders.length === 0) {
+    list.innerHTML = "<p style='text-align:center;'>No orders assigned.</p>";
+    return;
+  }
+
+  myOrders.forEach((o, i) => {
+    list.innerHTML += `
+    <div class="order">
+      <h3>${o.food}</h3>
+      <p>${o.name} (${o.phone})</p>
+      <p>Qty: ${o.quantity}</p>
+      <p>Combo: ${o.combo}</p>
+      <p>Total: ${o.total}</p>
+      <p>Status: ${o.status}</p>
+
+      <button onclick="out(${i})">Out</button>
+      <button onclick="done(${i})">Delivered</button>
+    </div>`;
   });
 }
 
-function markOut(i) {
+function out(i) {
   let orders = JSON.parse(localStorage.getItem("orders"));
-  orders[i].status = "Out for Delivery";
+
+  const realIndex = orders.findIndex(o =>
+    o.assignedTo === currentAgent &&
+    o.food === document.querySelectorAll(".order h3")[i].innerText
+  );
+
+  orders[realIndex].status = "Out for Delivery";
+
   localStorage.setItem("orders", JSON.stringify(orders));
-  loadOrders();
+  load();
 }
 
-function deliver(i) {
+function done(i) {
   let orders = JSON.parse(localStorage.getItem("orders"));
-  const entered = prompt("Enter OTP from customer:");
 
-  if (parseInt(entered) === orders[i].otp) {
-    orders[i].status = "Delivered";
-    localStorage.setItem("orders", JSON.stringify(orders));
-    alert("Delivery confirmed ✅");
+  const realIndex = orders.findIndex(o =>
+    o.assignedTo === currentAgent &&
+    o.food === document.querySelectorAll(".order h3")[i].innerText
+  );
+
+  const otp = prompt("Enter OTP:");
+
+  if (+otp === orders[realIndex].otp) {
+    orders[realIndex].status = "Delivered";
+    alert("Delivered ✅");
   } else {
     alert("Wrong OTP ❌");
   }
 
-  loadOrders();
+  localStorage.setItem("orders", JSON.stringify(orders));
+  load();
 }
-
-loadOrders();
 </script>
 
 </body>
