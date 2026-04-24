@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Agents</title>
+
+<style>
+body { font-family:Poppins; background:#111; color:white; text-align:center; }
+input,button { padding:10px; margin:10px; }
+.agent { background:#222; margin:10px; padding:10px; border-radius:10px; }
+</style>
+</head>
+
+<body>
+
+<h2>👤 Delivery Agents</h2>
+
+<input id="name" placeholder="Agent name">
+<button onclick="add()">Add</button>
+
+<div id="list"></div>
+
+<script>
+function load(){
+  let a=JSON.parse(localStorage.getItem("agents"))||[];
+  let list=document.getElementById("list");
+  list.innerHTML="";
+  a.forEach(x=>list.innerHTML+=`<div class="agent">${x}</div>`);
+}
+
+function add(){
+  let name=document.getElementById("name").value;
+  if(!name) return;
+
+  let a=JSON.parse(localStorage.getItem("agents"))||[];
+  a.push(name);
+
+  localStorage.setItem("agents",JSON.stringify(a));
+  document.getElementById("name").value="";
+  load();
+}
+
+load();
+</script>
+
+</body>
+</html>
