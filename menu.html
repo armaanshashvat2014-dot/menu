@@ -32,7 +32,7 @@ body {
   border-radius: 15px;
   overflow: hidden;
   text-align: center;
-  backdrop-filter: blur(10px);
+  cursor: pointer;
   transition: transform 0.3s ease;
 }
 
@@ -54,6 +54,53 @@ body {
   font-size: 14px;
   padding: 0 10px 15px;
 }
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-box {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 15px;
+  width: 300px;
+  text-align: center;
+}
+
+.modal-box input, select {
+  width: 80%;
+  padding: 8px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.buy-btn {
+  background: #22c55e;
+  color: white;
+}
+
+.close-btn {
+  background: #ef4444;
+  color: white;
+}
 </style>
 
 </head>
@@ -64,37 +111,92 @@ body {
 
 <div class="menu-container">
 
-  <div class="card">
-    <img src="burger.gif" alt="Burger">
-    <h3>Burger</h3>
-    <p>Juicy grilled burger with fresh veggies.</p>
-  </div>
+ <!-- ONLY showing changed part -->
 
-  <div class="card">
-    <img src="pizza.gif" alt="Pizza">
-    <h3>Pizza</h3>
-    <p>Cheesy delight loaded with toppings.</p>
-  </div>
+<div class="card" onclick="openModal('Burger', 120)">
+  <img src="burger.gif">
+  <h3>Burger</h3>
+  <p>₹120</p>
+</div>
 
-  <div class="card">
-    <img src="pasta.gif" alt="Pasta">
-    <h3>Pasta</h3>
-    <p>Creamy Italian pasta cooked to perfection.</p>
-  </div>
+<div class="card" onclick="openModal('Pizza', 250)">
+  <img src="pizza.gif">
+  <h3>Pizza</h3>
+  <p>₹250</p>
+</div>
 
-  <div class="card">
-    <img src="sandwich.gif" alt="Sandwich">
-    <h3>Sandwich</h3>
-    <p>Freshly made sandwich with crispy fillings.</p>
-  </div>
+<div class="card" onclick="openModal('Pasta', 180)">
+  <img src="pasta.gif">
+  <h3>Pasta</h3>
+  <p>₹180</p>
+</div>
 
-  <div class="card">
-    <img src="dessert.gif" alt="Dessert">
-    <h3>Dessert</h3>
-    <p>Sweet treats to complete your meal.</p>
-  </div>
+<div class="card" onclick="openModal('Sandwich', 100)">
+  <img src="sandwich.gif">
+  <h3>Sandwich</h3>
+  <p>₹100</p>
+</div>
+
+<div class="card" onclick="openModal('Dessert', 90)">
+  <img src="desert.gif">
+  <h3>Dessert</h3>
+  <p>₹90</p>
+</div>
 
 </div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h2 id="foodName"></h2>
+
+    <label>Quantity:</label><br>
+    <input type="number" id="qty" value="1" min="1" onchange="updatePrice()">
+
+    <label>Combo:</label><br>
+    <select id="combo" onchange="updatePrice()">
+      <option value="0">None</option>
+      <option value="50">Fries + Coke (+₹50)</option>
+      <option value="80">Full Combo (+₹80)</option>
+    </select>
+
+    <h3 id="totalPrice">Total: ₹0</h3>
+
+    <button class="buy-btn" onclick="buy()">Buy</button>
+    <button class="close-btn" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<script>
+let currentPrice = 0;
+
+function openModal(name, price) {
+  document.getElementById("modal").style.display = "flex";
+  document.getElementById("foodName").innerText = name;
+  document.getElementById("qty").value = 1;
+  document.getElementById("combo").value = 0;
+
+  currentPrice = price;
+  updatePrice();
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+function updatePrice() {
+  const qty = parseInt(document.getElementById("qty").value);
+  const combo = parseInt(document.getElementById("combo").value);
+
+  const total = (currentPrice * qty) + combo;
+  document.getElementById("totalPrice").innerText = "Total: ₹" + total;
+}
+
+function buy() {
+  alert("Order placed successfully! 🎉");
+  closeModal();
+}
+</script>
 
 </body>
 </html>
