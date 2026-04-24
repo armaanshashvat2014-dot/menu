@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 
@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google-site-verification" content="29be57dadb77a650" />
 <title>Demo</title>
+
 <style>
 body {
   margin: 0;
@@ -64,20 +65,23 @@ button {
 
     <div id="appBox" style="display:none;">
       <h3 id="welcomeText"></h3>
-
       <a href="menu.html" class="portal">Dashboard</a>
-  
     </div>
 
   </div>
 </div>
 
-<script type="module">
+<script>
+  // Simulated user name (replace with real logic later)
+  const userName = "Armaan";
+
+  // Set welcome text
   document.getElementById("welcomeText").innerHTML =
-    `Welcome, back to (Name)`;
-}
+    `Welcome back, ${userName}`;
 
-
+  // Show the app box
+  document.getElementById("appBox").style.display = "block";
 </script>
+
 </body>
 </html>
