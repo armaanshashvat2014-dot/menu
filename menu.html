@@ -24,13 +24,12 @@ body { font-family:Poppins; background:orange; color:white; text-align:center; }
   <div class="card" onclick="openModal('Pizza',250)"><img src="pizza.gif"><h3>Pizza</h3></div>
   <div class="card" onclick="openModal('Pasta',180)"><img src="pasta.gif"><h3>Pasta</h3></div>
   <div class="card" onclick="openModal('Sandwich',100)"><img src="sandwich.gif"><h3>Sandwich</h3></div>
-  <div class="card" onclick="openModal('Dessert',90)"><img src="desert.gif"><h3>Dessert</h3></div>
+  <div class="card" onclick="openModal('Dessert',90)"><img src="dessert.gif"><h3>Dessert</h3></div>
 </div>
 
 <div class="modal" id="modal">
   <div class="box">
     <h3 id="food"></h3>
-
     <input id="qty" type="number" value="1"><br>
 
     <select id="combo">
@@ -47,7 +46,8 @@ body { font-family:Poppins; background:orange; color:white; text-align:center; }
 </div>
 
 <a href="orders.html">Orders</a> |
-<a href="agents.html">Agents</a>
+<a href="agents.html">Agents</a> |
+<a href="history.html">History</a>
 
 <script>
 let currentFood="", currentPrice=0;
@@ -76,10 +76,8 @@ function generateOTP(){ return Math.floor(1000+Math.random()*9000); }
 function assignAgent(){
   let agents=JSON.parse(localStorage.getItem("agents"))||[];
   let orders=JSON.parse(localStorage.getItem("orders"))||[];
-
-  if(agents.length===0) return "unassigned";
-
-  return agents[orders.length % agents.length]; // stable round-robin
+  if(agents.length===0) return "Unassigned";
+  return agents[orders.length % agents.length];
 }
 
 function buy(){
@@ -95,19 +93,18 @@ function buy(){
   let otp=generateOTP();
 
   orders.push({
-    id: Date.now(), // UNIQUE ID (important fix)
-    name, address, phone,
+    id: Date.now(),
+    name,address,phone,
     food: currentFood,
     quantity: document.getElementById("qty").value,
     combo: document.getElementById("combo").selectedOptions[0].text,
     total: document.getElementById("total").innerText,
     status:"Pending",
-    otp: otp,
+    otp,
     assignedTo: assignAgent()
   });
 
   localStorage.setItem("orders",JSON.stringify(orders));
-
   alert("Order placed! OTP: "+otp);
   closeModal();
 }
