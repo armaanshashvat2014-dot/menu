@@ -5,42 +5,26 @@
 <title>Menu</title>
 
 <style>
-body { font-family:Poppins; background:orange; color:white; margin:0; }
+body { font-family:Poppins; background:orange; color:white; text-align:center; }
 .menu { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; padding:20px; }
-.card { background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; text-align:center; cursor:pointer; }
+.card { background:#0003; padding:10px; border-radius:10px; cursor:pointer; }
 .card img { width:100%; height:150px; object-fit:cover; }
 
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; }
-.box { background:#222; padding:20px; border-radius:10px; text-align:center; }
-
-button { padding:10px; margin:5px; border:none; border-radius:8px; cursor:pointer; }
+.modal { display:none; position:fixed; inset:0; background:#0008; justify-content:center; align-items:center; }
+.box { background:#222; padding:20px; border-radius:10px; }
 </style>
 </head>
 
 <body>
 
-<h2 style="text-align:center;">🍽️ Menu</h2>
+<h2>🍽️ Menu</h2>
 
 <div class="menu">
-  <div class="card" onclick="openModal('Burger',120)">
-    <img src="burger.gif"><h3>Burger</h3>
-  </div>
-
-  <div class="card" onclick="openModal('Pizza',250)">
-    <img src="pizza.gif"><h3>Pizza</h3>
-  </div>
-
-  <div class="card" onclick="openModal('Pasta',180)">
-    <img src="pasta.gif"><h3>Pasta</h3>
-  </div>
-
-  <div class="card" onclick="openModal('Sandwich',100)">
-    <img src="sandwich.gif"><h3>Sandwich</h3>
-  </div>
-
-  <div class="card" onclick="openModal('Dessert',90)">
-    <img src="dessert.gif"><h3>Dessert</h3>
-  </div>
+  <div class="card" onclick="openModal('Burger',120)"><img src="burger.gif"><h3>Burger</h3></div>
+  <div class="card" onclick="openModal('Pizza',250)"><img src="pizza.gif"><h3>Pizza</h3></div>
+  <div class="card" onclick="openModal('Pasta',180)"><img src="pasta.gif"><h3>Pasta</h3></div>
+  <div class="card" onclick="openModal('Sandwich',100)"><img src="sandwich.gif"><h3>Sandwich</h3></div>
+  <div class="card" onclick="openModal('Dessert',90)"><img src="desert.gif"><h3>Dessert</h3></div>
 </div>
 
 <div class="modal" id="modal">
@@ -62,8 +46,8 @@ button { padding:10px; margin:5px; border:none; border-radius:8px; cursor:pointe
   </div>
 </div>
 
-<a href="orders.html">Go to Orders</a> |
-<a href="agents.html">Manage Agents</a>
+<a href="orders.html">Orders</a> |
+<a href="agents.html">Agents</a>
 
 <script>
 let currentFood="", currentPrice=0;
@@ -76,9 +60,7 @@ function openModal(name,price){
   updateTotal();
 }
 
-function closeModal(){
-  document.getElementById("modal").style.display="none";
-}
+function closeModal(){ document.getElementById("modal").style.display="none"; }
 
 document.getElementById("qty").oninput=updateTotal;
 document.getElementById("combo").onchange=updateTotal;
@@ -94,8 +76,10 @@ function generateOTP(){ return Math.floor(1000+Math.random()*9000); }
 function assignAgent(){
   let agents=JSON.parse(localStorage.getItem("agents"))||[];
   let orders=JSON.parse(localStorage.getItem("orders"))||[];
-  if(agents.length==0) return "Unassigned";
-  return agents[orders.length % agents.length];
+
+  if(agents.length===0) return "unassigned";
+
+  return agents[orders.length % agents.length]; // stable round-robin
 }
 
 function buy(){
@@ -103,7 +87,7 @@ function buy(){
   let address=prompt("Address:");
   let phone=prompt("Phone:");
 
-  if(!name||!address||!phone) return alert("Fill all!");
+  if(!name||!address||!phone) return alert("Fill all fields");
 
   let orders=JSON.parse(localStorage.getItem("orders"))||[];
   if(orders.length>=10) orders.shift();
@@ -111,14 +95,15 @@ function buy(){
   let otp=generateOTP();
 
   orders.push({
-    name,address,phone,
-    food:currentFood,
-    quantity:document.getElementById("qty").value,
-    combo:document.getElementById("combo").selectedOptions[0].text,
-    total:document.getElementById("total").innerText,
+    id: Date.now(), // UNIQUE ID (important fix)
+    name, address, phone,
+    food: currentFood,
+    quantity: document.getElementById("qty").value,
+    combo: document.getElementById("combo").selectedOptions[0].text,
+    total: document.getElementById("total").innerText,
     status:"Pending",
-    otp:otp,
-    assignedTo:assignAgent()
+    otp: otp,
+    assignedTo: assignAgent()
   });
 
   localStorage.setItem("orders",JSON.stringify(orders));
