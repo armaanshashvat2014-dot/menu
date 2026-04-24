@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: #020617;
+  color: white;
+}
+
+/* Login Screen */
+.login-box {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  background: #0f172a;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+}
+
+input {
+  padding: 10px;
+  width: 80%;
+  border-radius: 8px;
+  border: none;
+  margin: 10px 0;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #22c55e;
+  color: white;
+}
+
+/* Orders Page */
+.header {
+  text-align: center;
+  padding: 20px;
+  font-size: 28px;
+  background: #0f172a;
+}
+
+.container {
+  padding: 20px;
+}
+
+.order {
+  background: rgba(255,255,255,0.08);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="login-box" id="loginBox">
+  <div class="login-card">
+    <h2>🔐 Delivery Agent Login</h2>
+    <input type="password" id="pass" placeholder="Enter passcode">
+    <br>
+    <button onclick="verify()">Enter</button>
+  </div>
+</div>
+
+<!-- ORDERS -->
+<div id="ordersPage" style="display:none;">
+  <div class="header">📦 Orders</div>
+  <div class="container" id="ordersList"></div>
+</div>
+
+<script>
+const SECRET = "1234"; // change this
+
+function verify() {
+  const input = document.getElementById("pass").value;
+
+  if (input === SECRET) {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("ordersPage").style.display = "block";
+    loadOrders();
+  } else {
+    alert("Wrong passcode ❌");
+  }
+}
+
+function loadOrders() {
+  const orders = JSON.parse(localStorage.getItem("orders")) || [];
+  const container = document.getElementById("ordersList");
+
+  if (orders.length === 0) {
+    container.innerHTML = "<p>No orders yet.</p>";
+    return;
+  }
+
+  orders.reverse().forEach(order => {
+    const div = document.createElement("div");
+    div.className = "order";
+
+    div.innerHTML = `
+      <h3>${order.food}</h3>
+      <p><b>Name:</b> ${order.name}</p>
+      <p><b>Address:</b> ${order.address}</p>
+      <p><b>Quantity:</b> ${order.quantity}</p>
+      <p><b>Combo:</b> ${order.combo}</p>
+      <p><b>${order.total}</b></p>
+    `;
+
+    container.appendChild(div);
+  });
+}
+</script>
+
+</body>
+</html>
