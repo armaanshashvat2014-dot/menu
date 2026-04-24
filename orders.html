@@ -40,14 +40,27 @@ function loadOrders() {
   const container = document.getElementById("ordersList");
   container.innerHTML = "";
 
+  if (orders.length === 0) {
+    container.innerHTML = "<p>No orders yet.</p>";
+    return;
+  }
+
   orders.forEach((order, index) => {
     const div = document.createElement("div");
     div.className = "order";
+
+    // Safe fallback (in case old orders don't have fields)
+    const combo = order.combo || "None";
+    const total = order.total || "₹0";
+    const qty = order.quantity || 1;
 
     div.innerHTML = `
       <h3>${order.food}</h3>
       <p><b>Name:</b> ${order.name}</p>
       <p><b>Phone:</b> ${order.phone}</p>
+      <p><b>Quantity:</b> ${qty}</p>
+      <p><b>Combo:</b> ${combo}</p>
+      <p><b>Total:</b> ${total}</p>
       <p><b>Status:</b> ${order.status}</p>
 
       <button class="out" onclick="markOut(${index})">Out for Delivery</button>
