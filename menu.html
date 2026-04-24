@@ -1,229 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Food Menu</title>
+<title>Menu</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: Poppins, sans-serif;
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: white;
-}
+body { font-family:Poppins; background:orange; color:white; margin:0; }
+.menu { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; padding:20px; }
+.card { background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; text-align:center; cursor:pointer; }
+.card img { width:100%; height:150px; object-fit:cover; }
 
-.header {
-  text-align: center;
-  padding: 20px;
-  font-size: 28px;
-  font-weight: bold;
-}
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; }
+.box { background:#222; padding:20px; border-radius:10px; text-align:center; }
 
-.menu {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  padding: 20px;
-}
-
-.card {
-  background: rgba(255,255,255,0.12);
-  border-radius: 15px;
-  overflow: hidden;
-  text-align: center;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.card:hover {
-  transform: scale(1.05);
-}
-
-.card img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0,0,0,0.7);
-  z-index: 1000;
-}
-
-.modal-box {
-  background: #1e293b;
-  padding: 20px;
-  border-radius: 15px;
-  text-align: center;
-  width: 300px;
-}
-
-input, select {
-  width: 80%;
-  padding: 8px;
-  margin: 10px;
-  border-radius: 8px;
-  border: none;
-}
-
-button {
-  padding: 10px;
-  margin: 5px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.buy { background: #22c55e; color: white; }
-.close { background: #ef4444; color: white; }
-
-.view-orders {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #22c55e;
-  padding: 12px 18px;
-  border-radius: 10px;
-  color: white;
-  text-decoration: none;
-}
+button { padding:10px; margin:5px; border:none; border-radius:8px; cursor:pointer; }
 </style>
 </head>
 
 <body>
 
-<div class="header">🍽️ Menu</div>
+<h2 style="text-align:center;">🍽️ Menu</h2>
 
 <div class="menu">
   <div class="card" onclick="openModal('Burger',120)">
-    <img src="burger.gif">
-    <h3>Burger</h3>
-    <p>₹120</p>
+    <img src="burger.gif"><h3>Burger</h3>
   </div>
 
   <div class="card" onclick="openModal('Pizza',250)">
-    <img src="pizza.gif">
-    <h3>Pizza</h3>
-    <p>₹250</p>
+    <img src="pizza.gif"><h3>Pizza</h3>
   </div>
 
   <div class="card" onclick="openModal('Pasta',180)">
-    <img src="pasta.gif">
-    <h3>Pasta</h3>
-    <p>₹180</p>
+    <img src="pasta.gif"><h3>Pasta</h3>
   </div>
 
   <div class="card" onclick="openModal('Sandwich',100)">
-    <img src="sandwich.gif">
-    <h3>Sandwich</h3>
-    <p>₹100</p>
+    <img src="sandwich.gif"><h3>Sandwich</h3>
   </div>
 
   <div class="card" onclick="openModal('Dessert',90)">
-    <img src="desert.gif">
-    <h3>Dessert</h3>
-    <p>₹90</p>
+    <img src="dessert.gif"><h3>Dessert</h3>
   </div>
 </div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
-  <div class="modal-box">
-    <h2 id="foodName"></h2>
+  <div class="box">
+    <h3 id="food"></h3>
 
-    <input type="number" id="qty" value="1" min="1">
+    <input id="qty" type="number" value="1"><br>
 
     <select id="combo">
       <option value="0">No Combo</option>
-      <option value="50">Fries + Coke (+₹50)</option>
-      <option value="80">Full Combo (+₹80)</option>
+      <option value="50">Fries + Coke</option>
+      <option value="80">Full Combo</option>
     </select>
 
-    <h3 id="total">₹0</h3>
+    <h3 id="total"></h3>
 
-    <button class="buy" onclick="buy()">Buy</button>
-    <button class="close" onclick="closeModal()">Close</button>
+    <button onclick="buy()">Buy</button>
+    <button onclick="closeModal()">Close</button>
   </div>
 </div>
 
-<a href="orders.html" class="view-orders">Orders</a>
+<a href="orders.html">Go to Orders</a> |
+<a href="agents.html">Manage Agents</a>
 
 <script>
-let currentPrice = 0;
-let currentFood = "";
+let currentFood="", currentPrice=0;
 
-function openModal(name, price) {
-  currentFood = name;
-  currentPrice = price;
-
-  document.getElementById("foodName").innerText = name;
-  document.getElementById("qty").value = 1;
-  document.getElementById("combo").value = 0;
-
-  document.getElementById("modal").style.display = "flex";
-
+function openModal(name,price){
+  currentFood=name;
+  currentPrice=price;
+  document.getElementById("food").innerText=name;
+  document.getElementById("modal").style.display="flex";
   updateTotal();
 }
 
-function closeModal() {
-  document.getElementById("modal").style.display = "none";
+function closeModal(){
+  document.getElementById("modal").style.display="none";
 }
 
-document.getElementById("qty").oninput = updateTotal;
-document.getElementById("combo").onchange = updateTotal;
+document.getElementById("qty").oninput=updateTotal;
+document.getElementById("combo").onchange=updateTotal;
 
-function updateTotal() {
-  const qty = parseInt(document.getElementById("qty").value) || 1;
-  const combo = parseInt(document.getElementById("combo").value) || 0;
-
-  const total = (currentPrice * qty) + combo;
-  document.getElementById("total").innerText = "₹" + total;
+function updateTotal(){
+  let qty=+document.getElementById("qty").value;
+  let combo=+document.getElementById("combo").value;
+  document.getElementById("total").innerText="₹"+(qty*currentPrice+combo);
 }
 
-function generateOTP() {
-  return Math.floor(1000 + Math.random() * 9000);
+function generateOTP(){ return Math.floor(1000+Math.random()*9000); }
+
+function assignAgent(){
+  let agents=JSON.parse(localStorage.getItem("agents"))||[];
+  let orders=JSON.parse(localStorage.getItem("orders"))||[];
+  if(agents.length==0) return "Unassigned";
+  return agents[orders.length % agents.length];
 }
 
-function buy() {
-  const name = prompt("Enter your name:");
-  const address = prompt("Enter your address:");
-  const phone = prompt("Enter phone:");
+function buy(){
+  let name=prompt("Name:");
+  let address=prompt("Address:");
+  let phone=prompt("Phone:");
 
-  if (!name || !address || !phone) {
-    alert("Fill all details");
-    return;
-  }
+  if(!name||!address||!phone) return alert("Fill all!");
 
-  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+  let orders=JSON.parse(localStorage.getItem("orders"))||[];
+  if(orders.length>=10) orders.shift();
 
-  if (orders.length >= 10) orders.shift();
-
-  const otp = generateOTP();
+  let otp=generateOTP();
 
   orders.push({
-    name,
-    address,
-    phone,
-    food: currentFood,
-    quantity: document.getElementById("qty").value,
-    combo: document.getElementById("combo").selectedOptions[0].text,
-    total: document.getElementById("total").innerText,
-    status: "Pending",
-    otp: otp
+    name,address,phone,
+    food:currentFood,
+    quantity:document.getElementById("qty").value,
+    combo:document.getElementById("combo").selectedOptions[0].text,
+    total:document.getElementById("total").innerText,
+    status:"Pending",
+    otp:otp,
+    assignedTo:assignAgent()
   });
 
-  localStorage.setItem("orders", JSON.stringify(orders));
+  localStorage.setItem("orders",JSON.stringify(orders));
 
-  alert("Order placed! OTP: " + otp);
+  alert("Order placed! OTP: "+otp);
   closeModal();
 }
 </script>
