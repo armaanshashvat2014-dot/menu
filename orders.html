@@ -4,140 +4,116 @@
 <title>Agent Panel</title>
 
 <style>
-body { font-family:Poppins; background:#020617; color:white; margin:0; }
-
-.login {
-  display:flex; justify-content:center; align-items:center;
-  height:100vh;
-}
-
-.box {
-  background:#111; padding:20px; border-radius:10px; text-align:center;
-}
-
-.order {
-  background:#111; margin:10px; padding:10px; border-radius:10px;
-}
-
-button { padding:8px; margin:5px; }
+body { font-family:Poppins; background:#020617; color:white; text-align:center; }
+.order { background:#111; margin:10px; padding:10px; border-radius:10px; }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginPage" class="login">
-  <div class="box">
-    <h2>🚚 Agent Login</h2>
-    <input id="agentName" placeholder="Enter your name"><br>
-    <button onclick="login()">Enter</button>
-  </div>
-</div>
+<h2>🚚 Agent Panel</h2>
 
-<!-- PANEL -->
-<div id="panel" style="display:none;">
-  <h2 style="text-align:center;">📦 Your Orders</h2>
-  <div id="list"></div>
-</div>
+<select id="agentSelect"></select>
+<button onclick="login()">Login</button>
+
+<h3 id="earnings">💰 Earnings: ₹0</h3>
+
+<div id="orders"></div>
 
 <script>
-let currentAgent = "";
+let currentAgent="";
 
-function login() {
-  const name = document.getElementById("agentName").value;
-
-  if (!name) return alert("Enter name");
-
-  const agents = JSON.parse(localStorage.getItem("agents")) || [];
-
-  if (!agents.includes(name)) {
-    alert("Agent not found ❌");
-    return;
-  }
-
-  currentAgent = name;
-  localStorage.setItem("loggedAgent", name);
-
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("panel").style.display = "block";
-
-  load();
+function loadAgents(){
+  let agents=JSON.parse(localStorage.getItem("agents"))||[];
+  document.getElementById("agentSelect").innerHTML =
+    agents.map(a=>`<option>${a}</option>`).join("");
 }
 
-// auto login if already saved
-window.onload = () => {
-  const saved = localStorage.getItem("loggedAgent");
-  if (saved) {
-    currentAgent = saved;
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("panel").style.display = "block";
-    load();
+function login(){
+  currentAgent=document.getElementById("agentSelect").value;
+  localStorage.setItem("loggedAgent",currentAgent);
+  loadOrders();
+}
+
+function loadOrders(){
+  let orders=JSON.parse(localStorage.getItem("orders"))||[];
+  let div=document.getElementById("orders");
+
+  let myOrders=orders.filter(o=>o.assignedTo===currentAgent);
+
+  div.innerHTML = myOrders.length===0 ? "<p>No orders</p>" :
+    myOrders.map(o=>`
+      <div class="order">
+        <h3>${o.food}</h3>
+        <p>${o.name}</p>
+        <p>${o.total}</p>
+        <p>Status: ${o.status}</p>
+
+        <button onclick="out(${o.id})">Out</button>
+        <button onclick="done(${o.id})">Delivered</button>
+      </div>
+    `).join("");
+
+  updateEarnings();
+}
+
+function updateOrder(id, fn){
+  let orders=JSON.parse(localStorage.getItem("orders"))||[];
+  let i=orders.findIndex(o=>o.id===id);
+  if(i===-1) return;
+  fn(orders[i], orders, i);
+  localStorage.setItem("orders",JSON.stringify(orders));
+}
+
+function out(id){
+  updateOrder(id, o=>o.status="Out for Delivery");
+  loadOrders();
+}
+
+function done(id){
+  let orders=JSON.parse(localStorage.getItem("orders"))||[];
+  let i=orders.findIndex(o=>o.id===id);
+  if(i===-1) return;
+
+  let otp=prompt("Enter OTP:");
+
+  if(+otp===orders[i].otp){
+    alert("Delivered ✅");
+
+    // 🔥 move to history
+    let history=JSON.parse(localStorage.getItem("history"))||[];
+    history.push(orders[i]);
+    localStorage.setItem("history",JSON.stringify(history));
+
+    // 💰 add earnings
+    let total=parseInt(orders[i].total.replace("₹",""));
+    let earnings=+localStorage.getItem("earnings")||0;
+    localStorage.setItem("earnings",earnings+total);
+
+    // ❌ remove order
+    orders.splice(i,1);
+    localStorage.setItem("orders",JSON.stringify(orders));
+  } else {
+    alert("Wrong OTP");
+  }
+
+  loadOrders();
+}
+
+function updateEarnings(){
+  let e=localStorage.getItem("earnings")||0;
+  document.getElementById("earnings").innerText="💰 Earnings: ₹"+e;
+}
+
+window.onload=()=>{
+  loadAgents();
+  let saved=localStorage.getItem("loggedAgent");
+  if(saved){
+    currentAgent=saved;
+    document.getElementById("agentSelect").value=saved;
+    loadOrders();
   }
 };
-
-function load() {
-  let orders = JSON.parse(localStorage.getItem("orders")) || [];
-  let list = document.getElementById("list");
-  list.innerHTML = "";
-
-  // 🔥 FILTER ONLY THIS AGENT
-  const myOrders = orders.filter(o => o.assignedTo === currentAgent);
-
-  if (myOrders.length === 0) {
-    list.innerHTML = "<p style='text-align:center;'>No orders assigned.</p>";
-    return;
-  }
-
-  myOrders.forEach((o, i) => {
-    list.innerHTML += `
-    <div class="order">
-      <h3>${o.food}</h3>
-      <p>${o.name} (${o.phone})</p>
-      <p>Qty: ${o.quantity}</p>
-      <p>Combo: ${o.combo}</p>
-      <p>Total: ${o.total}</p>
-      <p>Status: ${o.status}</p>
-
-      <button onclick="out(${i})">Out</button>
-      <button onclick="done(${i})">Delivered</button>
-    </div>`;
-  });
-}
-
-function out(i) {
-  let orders = JSON.parse(localStorage.getItem("orders"));
-
-  const realIndex = orders.findIndex(o =>
-    o.assignedTo === currentAgent &&
-    o.food === document.querySelectorAll(".order h3")[i].innerText
-  );
-
-  orders[realIndex].status = "Out for Delivery";
-
-  localStorage.setItem("orders", JSON.stringify(orders));
-  load();
-}
-
-function done(i) {
-  let orders = JSON.parse(localStorage.getItem("orders"));
-
-  const realIndex = orders.findIndex(o =>
-    o.assignedTo === currentAgent &&
-    o.food === document.querySelectorAll(".order h3")[i].innerText
-  );
-
-  const otp = prompt("Enter OTP:");
-
-  if (+otp === orders[realIndex].otp) {
-    orders[realIndex].status = "Delivered";
-    alert("Delivered ✅");
-  } else {
-    alert("Wrong OTP ❌");
-  }
-
-  localStorage.setItem("orders", JSON.stringify(orders));
-  load();
-}
 </script>
 
 </body>
