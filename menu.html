@@ -2,35 +2,152 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Menu</title>
+<title>Food App</title>
 
 <style>
-body { font-family:Poppins; background:orange; color:white; text-align:center; }
-.menu { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; padding:20px; }
-.card { background:#0003; padding:10px; border-radius:10px; cursor:pointer; }
-.card img { width:100%; height:150px; object-fit:cover; }
+body {
+  margin:0;
+  font-family:Poppins, sans-serif;
+  background:linear-gradient(135deg,#f97316,#ea580c);
+  color:white;
+}
 
-.modal { display:none; position:fixed; inset:0; background:#0008; justify-content:center; align-items:center; }
-.box { background:#222; padding:20px; border-radius:10px; }
+/* HEADER */
+.header {
+  padding:20px;
+  text-align:center;
+  font-size:28px;
+  font-weight:bold;
+}
+
+/* SEARCH */
+.search-box {
+  display:flex;
+  justify-content:center;
+  padding:10px;
+}
+
+.search-box input {
+  width:80%;
+  max-width:400px;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  outline:none;
+  font-size:16px;
+}
+
+/* MENU GRID */
+.menu {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:20px;
+  padding:20px;
+}
+
+.card {
+  background:rgba(255,255,255,0.12);
+  border-radius:15px;
+  overflow:hidden;
+  text-align:center;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.card:hover {
+  transform:scale(1.05);
+}
+
+.card img {
+  width:100%;
+  height:150px;
+  object-fit:cover;
+}
+
+/* MODAL */
+.modal {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+}
+
+.box {
+  background:#1e293b;
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  width:300px;
+}
+
+input, select {
+  width:80%;
+  padding:10px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+}
+
+button {
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.buy { background:#22c55e; color:white; }
+.close { background:#ef4444; color:white; }
+
+/* ETA */
+.eta {
+  margin-top:10px;
+  font-size:14px;
+  color:#cbd5f5;
+}
 </style>
 </head>
 
 <body>
 
-<h2>🍽️ Menu</h2>
+<div class="header">🍔 Food Delivery</div>
 
-<div class="menu">
-  <div class="card" onclick="openModal('Burger',120)"><img src="burger.gif"><h3>Burger</h3></div>
-  <div class="card" onclick="openModal('Pizza',250)"><img src="pizza.gif"><h3>Pizza</h3></div>
-  <div class="card" onclick="openModal('Pasta',180)"><img src="pasta.gif"><h3>Pasta</h3></div>
-  <div class="card" onclick="openModal('Sandwich',100)"><img src="sandwich.gif"><h3>Sandwich</h3></div>
-  <div class="card" onclick="openModal('Dessert',90)"><img src="dessert.gif"><h3>Dessert</h3></div>
+<div class="search-box">
+  <input id="search" placeholder="Search food..." oninput="filterFood()">
 </div>
 
+<div class="menu" id="menu">
+
+  <div class="card" data-name="burger" onclick="openModal('Burger',120)">
+    <img src="burger.gif"><h3>Burger</h3>
+  </div>
+
+  <div class="card" data-name="pizza" onclick="openModal('Pizza',250)">
+    <img src="pizza.gif"><h3>Pizza</h3>
+  </div>
+
+  <div class="card" data-name="pasta" onclick="openModal('Pasta',180)">
+    <img src="pasta.gif"><h3>Pasta</h3>
+  </div>
+
+  <div class="card" data-name="sandwich" onclick="openModal('Sandwich',100)">
+    <img src="sandwich.gif"><h3>Sandwich</h3>
+  </div>
+
+  <div class="card" data-name="dessert" onclick="openModal('Dessert',90)">
+    <img src="dessert.gif"><h3>Dessert</h3>
+  </div>
+
+</div>
+
+<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="box">
     <h3 id="food"></h3>
-    <input id="qty" type="number" value="1"><br>
+
+    <input id="qty" type="number" value="1" min="1">
 
     <select id="combo">
       <option value="0">No Combo</option>
@@ -39,73 +156,65 @@ body { font-family:Poppins; background:orange; color:white; text-align:center; }
     </select>
 
     <h3 id="total"></h3>
+    <div class="eta" id="eta"></div>
 
-    <button onclick="buy()">Buy</button>
-    <button onclick="closeModal()">Close</button>
+    <button class="buy" onclick="buy()">Order</button>
+    <button class="close" onclick="closeModal()">Close</button>
   </div>
 </div>
-
-<a href="orders.html">Orders</a> |
-<a href="agents.html">Agents</a> |
-<a href="history.html">History</a>
 
 <script>
 let currentFood="", currentPrice=0;
 
+/* OPEN MODAL */
 function openModal(name,price){
   currentFood=name;
   currentPrice=price;
+
   document.getElementById("food").innerText=name;
   document.getElementById("modal").style.display="flex";
+
   updateTotal();
+  updateETA();
 }
 
-function closeModal(){ document.getElementById("modal").style.display="none"; }
+/* CLOSE */
+function closeModal(){
+  document.getElementById("modal").style.display="none";
+}
 
+/* TOTAL */
 document.getElementById("qty").oninput=updateTotal;
 document.getElementById("combo").onchange=updateTotal;
 
 function updateTotal(){
   let qty=+document.getElementById("qty").value;
   let combo=+document.getElementById("combo").value;
+
   document.getElementById("total").innerText="₹"+(qty*currentPrice+combo);
 }
 
-function generateOTP(){ return Math.floor(1000+Math.random()*9000); }
-
-function assignAgent(){
-  let agents=JSON.parse(localStorage.getItem("agents"))||[];
-  let orders=JSON.parse(localStorage.getItem("orders"))||[];
-  if(agents.length===0) return "Unassigned";
-  return agents[orders.length % agents.length];
+/* ETA SYSTEM */
+function updateETA(){
+  let minutes = Math.floor(Math.random()*20)+20; // 20–40 mins
+  document.getElementById("eta").innerText =
+    "Estimated delivery: " + minutes + " mins";
 }
 
-function buy(){
-  let name=prompt("Name:");
-  let address=prompt("Address:");
-  let phone=prompt("Phone:");
+/* SEARCH */
+function filterFood(){
+  let input=document.getElementById("search").value.toLowerCase();
+  let cards=document.querySelectorAll(".card");
 
-  if(!name||!address||!phone) return alert("Fill all fields");
-
-  let orders=JSON.parse(localStorage.getItem("orders"))||[];
-  if(orders.length>=10) orders.shift();
-
-  let otp=generateOTP();
-
-  orders.push({
-    id: Date.now(),
-    name,address,phone,
-    food: currentFood,
-    quantity: document.getElementById("qty").value,
-    combo: document.getElementById("combo").selectedOptions[0].text,
-    total: document.getElementById("total").innerText,
-    status:"Pending",
-    otp,
-    assignedTo: assignAgent()
+  cards.forEach(c=>{
+    let name=c.dataset.name;
+    c.style.display = name.includes(input) ? "block" : "none";
   });
+}
 
-  localStorage.setItem("orders",JSON.stringify(orders));
-  alert("Order placed! OTP: "+otp);
+/* BUY */
+function buy(){
+  alert("Order placed! 🚀\n" + document.getElementById("eta").innerText);
   closeModal();
 }
 </script>
