@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PNB Luxury Salon & Spa</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    background:#0f0f0f;
+    color:white;
+    overflow-x:hidden;
+}
+
+header{
+    padding:40px 20px;
+    text-align:center;
+    background:linear-gradient(135deg,#111,#1f1f1f);
+    border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+header h1{
+    font-size:3rem;
+    color:#d4af37;
+}
+
+header p{
+    color:#bbb;
+    margin-top:10px;
+}
+
+.container{
+    width:95%;
+    max-width:1400px;
+    margin:auto;
+    padding:40px 0;
+}
+
+.category{
+    margin-bottom:50px;
+}
+
+.category h2{
+    font-size:2rem;
+    color:#d4af37;
+    margin-bottom:20px;
+    border-left:5px solid #d4af37;
+    padding-left:15px;
+}
+
+.services{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:#181818;
+    border-radius:20px;
+    padding:25px;
+    transition:0.3s;
+    border:1px solid rgba(255,255,255,0.08);
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+}
+
+.card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 15px 40px rgba(212,175,55,0.25);
+}
+
+.card h3{
+    color:#fff;
+    margin-bottom:10px;
+    font-size:1.2rem;
+}
+
+.price{
+    color:#d4af37;
+    font-size:1.1rem;
+    font-weight:600;
+}
+
+.duration{
+    color:#aaa;
+    margin-top:5px;
+    font-size:0.9rem;
+}
+
+.modal{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.8);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    z-index:1000;
+}
+
+.modal-content{
+    background:#181818;
+    width:100%;
+    max-width:500px;
+    border-radius:25px;
+    padding:30px;
+    position:relative;
+    animation:popup 0.3s ease;
+}
+
+@keyframes popup{
+    from{
+        transform:scale(0.8);
+        opacity:0;
+    }
+    to{
+        transform:scale(1);
+        opacity:1;
+    }
+}
+
+.close{
+    position:absolute;
+    top:15px;
+    right:20px;
+    font-size:1.5rem;
+    cursor:pointer;
+    color:#fff;
+}
+
+.modal-content h2{
+    color:#d4af37;
+    margin-bottom:15px;
+}
+
+.modal-content p{
+    color:#ccc;
+    line-height:1.6;
+    margin-bottom:15px;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    background:#d4af37;
+    color:#000;
+    font-weight:700;
+    cursor:pointer;
+    font-size:1rem;
+    transition:0.3s;
+}
+
+button:hover{
+    background:white;
+}
+
+footer{
+    text-align:center;
+    padding:30px;
+    color:#999;
+    border-top:1px solid rgba(255,255,255,0.08);
+    margin-top:40px;
+}
+
+@media(max-width:768px){
+    header h1{
+        font-size:2.2rem;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>PNB Luxury Salon & Spa</h1>
+    <p>Beauty • Wellness • Elegance</p>
+</header>
+
+<div class="container" id="menu"></div>
+
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalDesc"></p>
+        <p class="price" id="modalPrice"></p>
+        <button onclick="orderService()">Book Now</button>
+    </div>
+</div>
+
+<footer>
+    © 2026 PNB Luxury Salon & Spa
+</footer>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBxg2uQrE6vkWXfQSao9T79L7uONV2x8ks",
+  authDomain: "menu-22498.firebaseapp.com",
+  projectId: "menu-22498",
+  storageBucket: "menu-22498.firebasestorage.app",
+  messagingSenderId: "1078210032930",
+  appId: "1:1078210032930:web:8127b7c86fa4c26e11e17b",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const data = [
+
+{
+category:"Massage & Spa",
+items:[
+["Ayurvedic Massage","45 mins / 60 mins","₹1500 / ₹1800"],
+["Aroma Therapy","45 mins / 60 mins","₹2000 / ₹2500"],
+["Deep Tissue Massage","60 mins","₹3000"],
+["Body Polish","Luxury Body Glow Treatment","₹3500"]
+]
+},
+
+{
+category:"Piercing & Beauty",
+items:[
+["Wart Removal","","₹200"],
+["Nose Piercing","","₹600"],
+["Single Ear Piercing","","₹800"],
+["Double Ear Piercing","","₹1200"],
+["Mehandi","","₹500"],
+["Fashion Plait","","₹500"],
+["Flower Plait Fixing","","₹800"]
+]
+},
+
+{
+category:"Makeup",
+items:[
+["Light Makeup","","₹2500"],
+["Party Makeup","","₹3500"],
+["Bridal Trial Makeup","","₹2500"],
+["Bridal Makeup","","₹7500"],
+["Reception Makeup","","₹5000"]
+]
+},
+
+{
+category:"Saree Styling",
+items:[
+["Half Saree Draping","","₹300"],
+["Saree Draping","","₹500"],
+["Saree Pleating","","₹700"]
+]
+},
+
+{
+category:"Pedicure",
+items:[
+["Basic Pedicure","","₹500"],
+["Spa Pedicure","","₹600"],
+["Crystal Pedicure","","₹900"],
+["Aromatic Pedicure","","₹1200"],
+["Heel Peel Pedicure","","₹1300"],
+["PNB Signature Pedicure","","₹1600"],
+["Bomb Pedicure","","₹2000"]
+]
+},
+
+{
+category:"Manicure & Nails",
+items:[
+["Basic Manicure","","₹300"],
+["Spa Manicure","","₹500"],
+["Crystal Spa Manicure","","₹750"],
+["Bomb Manicure","","₹1800"],
+["Nail Cut & Colouring","","₹200"],
+["Nail Filing & Colouring","","₹200"],
+["Colouring","","₹100"],
+["Nail Filing","","₹50"],
+["French Polish","","₹250"],
+["Gel Polish","","₹500"],
+["Gel Polish Removal","","₹200"]
+]
+},
+
+{
+category:"Hair Treatments",
+items:[
+["Perming - Small","","₹2000"],
+["Perming - Medium","","₹3000"],
+["Perming - Large","","₹4000"],
+
+["Smoothening - Small","","₹3000"],
+["Smoothening - Medium","","₹4000"],
+["Smoothening - Large","","₹5000"],
+
+["Rebonding - Small","","₹3000"],
+["Rebonding - Medium","","₹4000"],
+["Rebonding - Large","","₹5000"],
+
+["Straightening - Small","","₹3000"],
+["Straightening - Medium","","₹4000"],
+["Straightening - Large","","₹5000"],
+
+["Keratin Treatment","","₹5000"],
+["Express Keratin Treatment","","₹4500"],
+["Deep Conditioning","","₹3000"],
+["Hair Scrub","","₹800"],
+["Metal DK","","₹1000"],
+["Hair Treatments","","₹1300"]
+]
+},
+
+{
+category:"Hair Colour & Haircuts",
+items:[
+["Color Application Only","","₹300"],
+["Color Application + Wash","","₹550"],
+["Full Color Application","","₹500"],
+["Full Color + Wash","","₹800"],
+["Touch Up","","₹1000"],
+["Haircut Below 8 Years","","₹200"],
+["Basic Haircut","","₹250"],
+["Split Ends Haircut","","₹400"],
+["Advanced Haircut","","₹500"]
+]
+},
+
+{
+category:"Hair Wash & Oil Massage",
+items:[
+["Normal Hair Wash + Conditioner","","₹300"],
+["Til/Coconut Oil Head Massage","","₹300"],
+["Olive/Aroma/Cooling Oil Massage","","₹350"]
+]
+},
+
+{
+category:"Face Packs & Masks",
+items:[
+["Young Face Pack","","₹300"],
+["White Face Pack","","₹300"],
+["Charcoal Pack","","₹350"],
+["Tan Pack","","₹500 - ₹700"],
+["Charcoal Face Mask","","₹750"],
+["Gold Facial","","₹800"]
+]
+},
+
+{
+category:"Relaxation Massages",
+items:[
+["Hand Massage","","₹250"],
+["Foot Work Massage","","₹300"],
+["Back Energy Massage","","₹400"]
+]
+}
+
+];
+
+const menu = document.getElementById("menu");
+
+data.forEach(section => {
+
+    const category = document.createElement("div");
+    category.className = "category";
+
+    category.innerHTML = `
+        <h2>${section.category}</h2>
+        <div class="services">
+            ${section.items.map(item => `
+                <div class="card"
+                    onclick="openModal(
+                        '${item[0]}',
+                        '${item[1]}',
+                        '${item[2]}'
+                    )">
+
+                    <h3>${item[0]}</h3>
+                    <div class="price">${item[2]}</div>
+                    <div class="duration">${item[1]}</div>
+
+                </div>
+            `).join("")}
+        </div>
+    `;
+
+    menu.appendChild(category);
+
+});
+
+let selectedService = "";
+
+window.openModal = function(title, desc, price){
+
+    selectedService = title;
+
+    document.getElementById("modalTitle").innerText = title;
+
+    document.getElementById("modalDesc").innerText =
+    desc || "Luxury professional salon service with premium care and expert beauticians.";
+
+    document.getElementById("modalPrice").innerText = price;
+
+    document.getElementById("modal").style.display = "flex";
+}
+
+window.closeModal = function(){
+    document.getElementById("modal").style.display = "none";
+}
+
+window.orderService = async function(){
+
+    try{
+
+        await addDoc(collection(db,"orders"),{
+            service:selectedService,
+            createdAt:serverTimestamp()
+        });
+
+        alert("Booking Request Sent Successfully!");
+
+    }catch(err){
+
+        alert("Error: " + err);
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
