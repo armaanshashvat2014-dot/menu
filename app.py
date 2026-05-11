@@ -501,3 +501,30 @@ elif page == "Analytics":
 
     for r in recent:
         st.write(r)
+
+# =========================
+# FOOTER
+# =========================
+
+st.markdown(
+    """
+    <hr style='margin-top:50px;border:1px solid rgba(255,255,255,0.08);'>
+
+    <div style='
+        text-align:center;
+        padding:25px;
+        color:#888;
+        font-size:18px;
+        letter-spacing:1px;
+    '>
+        Powered by <span style='color:#d4af37;font-weight:700;'>MentorLoop EDU</span>
+        and
+        <span style='color:#d4af37;font-weight:700;'>PNB</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+```
+
+---
+
