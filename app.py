@@ -84,11 +84,8 @@ def generate_ai_tasks(service, customer_name):
     Customer name: {customer_name}
 
     In ONE SHORT PARAGRAPH ONLY:
-    - explain the service
-    - give quick preparation advice
-    - mention duration briefly
-
-    Keep it luxurious, concise, and friendly.
+    explain the service briefly, preparation advice,
+    and duration. Keep luxurious and concise.
     """
 
     try:
@@ -194,7 +191,7 @@ services = {
 }
 
 # ======================================================
-# CUSTOM CSS
+# CSS
 # ======================================================
 
 st.markdown("""
@@ -215,17 +212,6 @@ h1,h2,h3{
     border-radius:20px;
     margin-bottom:20px;
     border:1px solid rgba(255,255,255,0.08);
-    box-shadow:0 10px 25px rgba(0,0,0,0.3);
-}
-
-.price{
-    color:#d4af37;
-    font-size:28px;
-    font-weight:bold;
-}
-
-.duration{
-    color:#aaa;
 }
 
 .dashboard-card{
@@ -234,6 +220,12 @@ h1,h2,h3{
     border-radius:20px;
     margin-bottom:20px;
     border:1px solid rgba(255,255,255,0.08);
+}
+
+.price{
+    color:#d4af37;
+    font-size:28px;
+    font-weight:bold;
 }
 
 </style>
@@ -293,7 +285,7 @@ if mode == "Customer":
                 st.markdown(f"""
                 <div class='service-card'>
                     <h3>{service}</h3>
-                    <div class='duration'>{duration}</div>
+                    <p>{duration}</p>
                     <div class='price'>{price}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -341,7 +333,7 @@ if mode == "Customer":
                     if remaining <= 0:
 
                         st.error(
-                            "This slot is fully occupied."
+                            "This slot is occupied."
                         )
 
                     else:
@@ -479,26 +471,33 @@ elif mode == "Customer Confirmation":
                 )
 
                 if st.button(
-                    f"YES Complete {doc.id}"
+                    f"YES Complete {doc.id}",
+                    key=f"confirm_{doc.id}"
                 ):
 
-                    booking["status"] = "Completed"
+                    try:
 
-                    db.collection(
-                        "completed_bookings"
-                    ).add(booking)
+                        booking["status"] = "Completed"
 
-                    db.collection(
-                        "bookings"
-                    ).document(
-                        doc.id
-                    ).delete()
+                        db.collection(
+                            "completed_bookings"
+                        ).document(doc.id).set(booking)
 
-                    st.success(
-                        "Thank you for confirming!"
-                    )
+                        db.collection(
+                            "bookings"
+                        ).document(doc.id).delete()
 
-                    st.rerun()
+                        st.success(
+                            "Booking completed and removed!"
+                        )
+
+                        st.rerun()
+
+                    except Exception as e:
+
+                        st.error(
+                            f"Delete Error: {e}"
+                        )
 
         if not found:
 
@@ -538,24 +537,14 @@ elif mode == "Worker Login":
             "bookings"
         ).stream()
 
-        bookings = []
-
         for doc in bookings_ref:
 
-            data = doc.to_dict()
-            data["doc_id"] = doc.id
-
-            bookings.append(data)
-
-        for booking in bookings:
+            booking = doc.to_dict()
 
             if (
                 booking.get("assigned_role")
                 != worker_role
             ):
-                continue
-
-            if booking.get("status") == "Completed":
                 continue
 
             st.markdown(f"""
@@ -600,14 +589,14 @@ elif mode == "Worker Login":
             with col1:
 
                 if st.button(
-                    f"Accept #{booking.get('doc_id')}",
-                    key=f"a_{booking.get('doc_id')}"
+                    f"Accept {doc.id}",
+                    key=f"accept_{doc.id}"
                 ):
 
                     db.collection(
                         "bookings"
                     ).document(
-                        booking.get("doc_id")
+                        doc.id
                     ).update({
                         "status":"Accepted"
                     })
@@ -617,17 +606,17 @@ elif mode == "Worker Login":
             with col2:
 
                 if st.button(
-                    f"Complete #{booking.get('doc_id')}",
-                    key=f"c_{booking.get('doc_id')}"
+                    f"Complete {doc.id}",
+                    key=f"complete_{doc.id}"
                 ):
 
                     db.collection(
                         "bookings"
                     ).document(
-                        booking.get("doc_id")
+                        doc.id
                     ).update({
                         "status":
-                            "Awaiting Customer Confirmation"
+                        "Awaiting Customer Confirmation"
                     })
 
                     st.success(
@@ -635,8 +624,6 @@ elif mode == "Worker Login":
                     )
 
                     st.rerun()
-
-            st.divider()
 
     elif password != "":
 
