@@ -236,13 +236,6 @@ h1,h2,h3{
     border:1px solid rgba(255,255,255,0.08);
 }
 
-.slot-box{
-    padding:10px;
-    border-radius:10px;
-    background:#232323;
-    margin-bottom:10px;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -272,6 +265,7 @@ mode = st.sidebar.radio(
     "Select Mode",
     [
         "Customer",
+        "Customer Confirmation",
         "Worker Login"
     ]
 )
@@ -317,7 +311,7 @@ if mode == "Customer":
                     )
 
                     booking_date = st.date_input(
-                        "Select Booking Date",
+                        "Booking Date",
                         key=f"date_{service}_{i}"
                     )
 
@@ -429,6 +423,88 @@ if mode == "Customer":
                             st.error(
                                 "Please fill all fields"
                             )
+
+# ======================================================
+# CUSTOMER CONFIRMATION
+# ======================================================
+
+elif mode == "Customer Confirmation":
+
+    st.title("✅ Confirm Your Service")
+
+    customer_name_confirm = st.text_input(
+        "Customer Name"
+    )
+
+    customer_phone_confirm = st.text_input(
+        "Customer Phone"
+    )
+
+    if st.button("Load My Services"):
+
+        confirm_docs = db.collection(
+            "bookings"
+        ).stream()
+
+        found = False
+
+        for doc in confirm_docs:
+
+            booking = doc.to_dict()
+
+            if (
+                booking.get("customer_name")
+                == customer_name_confirm
+                and
+                booking.get("phone")
+                == customer_phone_confirm
+                and
+                booking.get("status")
+                ==
+                "Awaiting Customer Confirmation"
+            ):
+
+                found = True
+
+                st.success(
+                    f"""
+                    Was your
+                    {booking.get('service')}
+                    completed successfully?
+                    """
+                )
+
+                st.info(
+                    booking.get("ai_tasks")
+                )
+
+                if st.button(
+                    f"YES Complete {doc.id}"
+                ):
+
+                    booking["status"] = "Completed"
+
+                    db.collection(
+                        "completed_bookings"
+                    ).add(booking)
+
+                    db.collection(
+                        "bookings"
+                    ).document(
+                        doc.id
+                    ).delete()
+
+                    st.success(
+                        "Thank you for confirming!"
+                    )
+
+                    st.rerun()
+
+        if not found:
+
+            st.warning(
+                "No pending confirmations found."
+            )
 
 # ======================================================
 # WORKER LOGIN
@@ -554,71 +630,13 @@ elif mode == "Worker Login":
                             "Awaiting Customer Confirmation"
                     })
 
-                    st.rerun()
-
-        st.divider()
-
-        st.title("✅ Customer Confirmations")
-
-        customer_name_confirm = st.text_input(
-            "Customer Name"
-        )
-
-        customer_phone_confirm = st.text_input(
-            "Customer Phone"
-        )
-
-        if st.button("Load My Bookings"):
-
-            confirm_docs = db.collection(
-                "bookings"
-            ).stream()
-
-            for doc in confirm_docs:
-
-                booking = doc.to_dict()
-
-                if (
-                    booking.get("customer_name")
-                    == customer_name_confirm
-                    and
-                    booking.get("phone")
-                    == customer_phone_confirm
-                    and
-                    booking.get("status")
-                    ==
-                    "Awaiting Customer Confirmation"
-                ):
-
                     st.success(
-                        f"""
-                        {booking.get('service')}
-                        completed successfully?
-                        """
+                        "Waiting for customer confirmation."
                     )
 
-                    if st.button(
-                        f"YES Complete "
-                        f"{doc.id}"
-                    ):
+                    st.rerun()
 
-                        booking["status"] = "Completed"
-
-                        db.collection(
-                            "completed_bookings"
-                        ).add(booking)
-
-                        db.collection(
-                            "bookings"
-                        ).document(
-                            doc.id
-                        ).delete()
-
-                        st.success(
-                            "Booking Completed!"
-                        )
-
-                        st.rerun()
+            st.divider()
 
     elif password != "":
 
