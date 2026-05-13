@@ -49,6 +49,12 @@ AI_API_URL = st.secrets["AI_API_URL"]
 AI_API_KEY = st.secrets["AI_API_KEY"]
 
 # ======================================================
+# WORKER PASSWORD
+# ======================================================
+
+WORKER_PASSWORD = "PNBWORKER123"
+
+# ======================================================
 # AI TASK GENERATOR
 # ======================================================
 
@@ -56,15 +62,14 @@ def generate_ai_tasks(service, customer_name):
 
     prompt = f"""
     Customer booked: {service}
-    Customer Name: {customer_name}
+    Customer name: {customer_name}
 
-    Generate:
-    - worker role
-    - preparation steps
-    - estimated time
-    - materials required
+    In ONE SHORT PARAGRAPH ONLY:
+    - explain the service simply
+    - give quick preparation advice
+    - mention duration briefly
 
-    Keep it professional.
+    Keep it luxurious, friendly, and concise.
     """
 
     try:
@@ -76,10 +81,10 @@ def generate_ai_tasks(service, customer_name):
                 "Content-Type": "application/json"
             },
             json={
-                "messages":[
+                "messages": [
                     {
-                        "role":"user",
-                        "content":prompt
+                        "role": "user",
+                        "content": prompt
                     }
                 ]
             }
@@ -254,20 +259,19 @@ Beauty • Wellness • Luxury
 # SIDEBAR
 # ======================================================
 
-page = st.sidebar.selectbox(
-    "Navigation",
+mode = st.sidebar.radio(
+    "Select Mode",
     [
-        "Salon Menu",
-        "Worker Dashboard",
-        "Analytics"
+        "Customer",
+        "Worker Login"
     ]
 )
 
 # ======================================================
-# MENU PAGE
+# CUSTOMER MENU
 # ======================================================
 
-if page == "Salon Menu":
+if mode == "Customer":
 
     st.title("Luxury Services")
 
@@ -348,19 +352,15 @@ if page == "Salon Menu":
                                 })
 
                                 st.success(
-                                    "Booking saved to Firebase!"
+                                    "Booking Confirmed!"
                                 )
 
-                                st.info(
-                                    f"Assigned Role: {role}"
-                                )
-
-                                st.code(ai_tasks)
+                                st.info(ai_tasks)
 
                             except Exception as e:
 
                                 st.error(
-                                    f"Firebase Error: {e}"
+                                    f"Error: {e}"
                                 )
 
                         else:
@@ -370,160 +370,126 @@ if page == "Salon Menu":
                             )
 
 # ======================================================
-# WORKER DASHBOARD
+# WORKER LOGIN
 # ======================================================
 
-elif page == "Worker Dashboard":
+elif mode == "Worker Login":
 
-    st.title("👩‍💼 Worker Dashboard")
+    st.title("🔒 Worker Access")
 
-    search = st.text_input(
-        "Search Customer or Service"
+    password = st.text_input(
+        "Enter Worker Password",
+        type="password"
     )
 
-    bookings_ref = db.collection(
-        "bookings"
-    ).stream()
+    if password == WORKER_PASSWORD:
 
-    bookings = []
+        worker_role = st.selectbox(
+            "Select Your Role",
+            [
+                "Massage Expert",
+                "Makeup Artist",
+                "Hair Stylist",
+                "Nail Technician",
+                "Salon Staff"
+            ]
+        )
 
-    for doc in bookings_ref:
+        st.success("Access Granted")
 
-        data = doc.to_dict()
-        data["doc_id"] = doc.id
+        st.title("👩‍💼 Worker Dashboard")
 
-        bookings.append(data)
+        bookings_ref = db.collection(
+            "bookings"
+        ).stream()
 
-    for booking in bookings:
+        bookings = []
 
-        booking_text = str(booking).lower()
+        for doc in bookings_ref:
 
-        if (
-            search.lower() not in booking_text
-            and search != ""
-        ):
-            continue
+            data = doc.to_dict()
+            data["doc_id"] = doc.id
 
-        st.markdown(f"""
-        <div class='dashboard-card'>
+            bookings.append(data)
 
-            <h2>{booking.get('service')}</h2>
+        for booking in bookings:
 
-            <p>
-            <b>Customer:</b>
-            {booking.get('customer_name')}
-            </p>
-
-            <p>
-            <b>Phone:</b>
-            {booking.get('phone')}
-            </p>
-
-            <p>
-            <b>Role:</b>
-            {booking.get('assigned_role')}
-            </p>
-
-            <p>
-            <b>Status:</b>
-            {booking.get('status')}
-            </p>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.subheader("🤖 AI Instructions")
-
-        st.code(booking.get("ai_tasks"))
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-
-            if st.button(
-                f"Accept #{booking.get('doc_id')}",
-                key=f"a_{booking.get('doc_id')}"
+            if (
+                booking.get("assigned_role")
+                != worker_role
             ):
+                continue
 
-                db.collection(
-                    "bookings"
-                ).document(
-                    booking.get("doc_id")
-                ).update({
-                    "status":"Accepted"
-                })
+            st.markdown(f"""
+            <div class='dashboard-card'>
 
-                st.rerun()
+                <h2>{booking.get('service')}</h2>
 
-        with col2:
+                <p>
+                <b>Customer:</b>
+                {booking.get('customer_name')}
+                </p>
 
-            if st.button(
-                f"Complete #{booking.get('doc_id')}",
-                key=f"c_{booking.get('doc_id')}"
-            ):
+                <p>
+                <b>Phone:</b>
+                {booking.get('phone')}
+                </p>
 
-                db.collection(
-                    "bookings"
-                ).document(
-                    booking.get("doc_id")
-                ).update({
-                    "status":"Completed"
-                })
+                <p>
+                <b>Status:</b>
+                {booking.get('status')}
+                </p>
 
-                st.rerun()
+            </div>
+            """, unsafe_allow_html=True)
 
-        with col3:
+            st.subheader("🤖 AI Instructions")
 
-            if st.button(
-                f"Delete #{booking.get('doc_id')}",
-                key=f"d_{booking.get('doc_id')}"
-            ):
+            st.info(
+                booking.get("ai_tasks")
+            )
 
-                db.collection(
-                    "bookings"
-                ).document(
-                    booking.get("doc_id")
-                ).delete()
+            col1, col2 = st.columns(2)
 
-                st.rerun()
+            with col1:
 
-        st.divider()
+                if st.button(
+                    f"Accept #{booking.get('doc_id')}",
+                    key=f"a_{booking.get('doc_id')}"
+                ):
 
-# ======================================================
-# ANALYTICS
-# ======================================================
+                    db.collection(
+                        "bookings"
+                    ).document(
+                        booking.get("doc_id")
+                    ).update({
+                        "status":"Accepted"
+                    })
 
-elif page == "Analytics":
+                    st.rerun()
 
-    st.title("📊 Salon Analytics")
+            with col2:
 
-    docs = list(
-        db.collection("bookings").stream()
-    )
+                if st.button(
+                    f"Complete #{booking.get('doc_id')}",
+                    key=f"c_{booking.get('doc_id')}"
+                ):
 
-    total = len(docs)
+                    db.collection(
+                        "bookings"
+                    ).document(
+                        booking.get("doc_id")
+                    ).update({
+                        "status":"Completed"
+                    })
 
-    pending = len([
-        d for d in docs
-        if d.to_dict().get("status") == "Pending"
-    ])
+                    st.rerun()
 
-    accepted = len([
-        d for d in docs
-        if d.to_dict().get("status") == "Accepted"
-    ])
+            st.divider()
 
-    completed = len([
-        d for d in docs
-        if d.to_dict().get("status") == "Completed"
-    ])
+    elif password != "":
 
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric("Total", total)
-    col2.metric("Pending", pending)
-    col3.metric("Accepted", accepted)
-    col4.metric("Completed", completed)
+        st.error("Wrong Password")
 
 # ======================================================
 # FOOTER
