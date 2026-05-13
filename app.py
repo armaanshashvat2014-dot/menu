@@ -55,6 +55,25 @@ AI_API_KEY = st.secrets["AI_API_KEY"]
 WORKER_PASSWORD = "PNBWORKER123"
 
 # ======================================================
+# TIME SLOTS
+# ======================================================
+
+time_slots = [
+    "10:00 AM",
+    "11:00 AM",
+    "12:00 PM",
+    "1:00 PM",
+    "2:00 PM",
+    "3:00 PM",
+    "4:00 PM",
+    "5:00 PM",
+    "6:00 PM",
+    "7:00 PM",
+    "8:00 PM",
+    "9:00 PM"
+]
+
+# ======================================================
 # AI TASK GENERATOR
 # ======================================================
 
@@ -65,11 +84,11 @@ def generate_ai_tasks(service, customer_name):
     Customer name: {customer_name}
 
     In ONE SHORT PARAGRAPH ONLY:
-    - explain the service simply
+    - explain the service
     - give quick preparation advice
     - mention duration briefly
 
-    Keep it luxurious, friendly, and concise.
+    Keep it luxurious, concise, and friendly.
     """
 
     try:
@@ -81,10 +100,10 @@ def generate_ai_tasks(service, customer_name):
                 "Content-Type": "application/json"
             },
             json={
-                "messages": [
+                "messages":[
                     {
-                        "role": "user",
-                        "content": prompt
+                        "role":"user",
+                        "content":prompt
                     }
                 ]
             }
@@ -152,20 +171,9 @@ services = {
         ("Body Polish","Luxury","₹3500"),
     ],
 
-    "Piercing & Beauty":[
-        ("Wart Removal","","₹200"),
-        ("Nose Piercing","","₹600"),
-        ("Single Ear Piercing","","₹800"),
-        ("Double Ear Piercing","","₹1200"),
-        ("Mehandi","","₹500"),
-        ("Fashion Plait","","₹500"),
-        ("Flower Plait Fixing","","₹800"),
-    ],
-
     "Makeup":[
         ("Light Makeup","","₹2500"),
         ("Party Makeup","","₹3500"),
-        ("Bridal Trial Makeup","","₹2500"),
         ("Bridal Makeup","","₹7500"),
         ("Reception Makeup","","₹5000"),
     ],
@@ -174,9 +182,6 @@ services = {
         ("Basic Pedicure","","₹500"),
         ("Spa Pedicure","","₹600"),
         ("Crystal Pedicure","","₹900"),
-        ("Aromatic Pedicure","","₹1200"),
-        ("Heel Peel Pedicure","","₹1300"),
-        ("PNB Signature Pedicure","","₹1600"),
         ("Bomb Pedicure","","₹2000"),
     ],
 
@@ -184,10 +189,7 @@ services = {
         ("Keratin Treatment","","₹5000"),
         ("Express Keratin Treatment","","₹4500"),
         ("Deep Conditioning","","₹3000"),
-        ("Hair Scrub","","₹800"),
         ("Smoothening","","₹4000"),
-        ("Rebonding","","₹4500"),
-        ("Straightening","","₹4500"),
     ]
 }
 
@@ -234,6 +236,13 @@ h1,h2,h3{
     border:1px solid rgba(255,255,255,0.08);
 }
 
+.slot-box{
+    padding:10px;
+    border-radius:10px;
+    background:#232323;
+    margin-bottom:10px;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -268,7 +277,7 @@ mode = st.sidebar.radio(
 )
 
 # ======================================================
-# CUSTOMER MENU
+# CUSTOMER
 # ======================================================
 
 if mode == "Customer":
@@ -307,12 +316,58 @@ if mode == "Customer":
                         key=f"phone_{service}_{i}"
                     )
 
+                    booking_date = st.date_input(
+                        "Select Booking Date",
+                        key=f"date_{service}_{i}"
+                    )
+
+                    time_slot = st.selectbox(
+                        "Choose Time Slot",
+                        time_slots,
+                        key=f"time_{service}_{i}"
+                    )
+
+                    slot_docs = db.collection("bookings") \
+                        .where(
+                            "booking_date",
+                            "==",
+                            str(booking_date)
+                        ) \
+                        .where(
+                            "time_slot",
+                            "==",
+                            time_slot
+                        ) \
+                        .stream()
+
+                    slot_count = len(list(slot_docs))
+
+                    remaining = 4 - slot_count
+
+                    if remaining <= 0:
+
+                        st.error(
+                            "This slot is fully occupied."
+                        )
+
+                    else:
+
+                        st.success(
+                            f"{remaining} slots remaining"
+                        )
+
                     if st.button(
-                        f"Confirm Booking",
+                        "Confirm Booking",
                         key=f"btn_{service}_{i}"
                     ):
 
-                        if customer_name and phone:
+                        if remaining <= 0:
+
+                            st.error(
+                                "Cannot book occupied slot."
+                            )
+
+                        elif customer_name and phone:
 
                             try:
 
@@ -345,6 +400,12 @@ if mode == "Customer":
 
                                     "status":
                                         "Pending",
+
+                                    "booking_date":
+                                        str(booking_date),
+
+                                    "time_slot":
+                                        time_slot,
 
                                     "created_at":
                                         str(datetime.now())
@@ -397,8 +458,6 @@ elif mode == "Worker Login":
 
         st.success("Access Granted")
 
-        st.title("👩‍💼 Worker Dashboard")
-
         bookings_ref = db.collection(
             "bookings"
         ).stream()
@@ -420,6 +479,9 @@ elif mode == "Worker Login":
             ):
                 continue
 
+            if booking.get("status") == "Completed":
+                continue
+
             st.markdown(f"""
             <div class='dashboard-card'>
 
@@ -436,14 +498,22 @@ elif mode == "Worker Login":
                 </p>
 
                 <p>
+                <b>Date:</b>
+                {booking.get('booking_date')}
+                </p>
+
+                <p>
+                <b>Time:</b>
+                {booking.get('time_slot')}
+                </p>
+
+                <p>
                 <b>Status:</b>
                 {booking.get('status')}
                 </p>
 
             </div>
             """, unsafe_allow_html=True)
-
-            st.subheader("🤖 AI Instructions")
 
             st.info(
                 booking.get("ai_tasks")
@@ -480,12 +550,75 @@ elif mode == "Worker Login":
                     ).document(
                         booking.get("doc_id")
                     ).update({
-                        "status":"Completed"
+                        "status":
+                            "Awaiting Customer Confirmation"
                     })
 
                     st.rerun()
 
-            st.divider()
+        st.divider()
+
+        st.title("✅ Customer Confirmations")
+
+        customer_name_confirm = st.text_input(
+            "Customer Name"
+        )
+
+        customer_phone_confirm = st.text_input(
+            "Customer Phone"
+        )
+
+        if st.button("Load My Bookings"):
+
+            confirm_docs = db.collection(
+                "bookings"
+            ).stream()
+
+            for doc in confirm_docs:
+
+                booking = doc.to_dict()
+
+                if (
+                    booking.get("customer_name")
+                    == customer_name_confirm
+                    and
+                    booking.get("phone")
+                    == customer_phone_confirm
+                    and
+                    booking.get("status")
+                    ==
+                    "Awaiting Customer Confirmation"
+                ):
+
+                    st.success(
+                        f"""
+                        {booking.get('service')}
+                        completed successfully?
+                        """
+                    )
+
+                    if st.button(
+                        f"YES Complete "
+                        f"{doc.id}"
+                    ):
+
+                        booking["status"] = "Completed"
+
+                        db.collection(
+                            "completed_bookings"
+                        ).add(booking)
+
+                        db.collection(
+                            "bookings"
+                        ).document(
+                            doc.id
+                        ).delete()
+
+                        st.success(
+                            "Booking Completed!"
+                        )
+
+                        st.rerun()
 
     elif password != "":
 
