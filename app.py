@@ -4,9 +4,9 @@ from firebase_admin import credentials, firestore
 import requests
 from datetime import datetime
 
-# =========================================
+# ======================================================
 # PAGE CONFIG
-# =========================================
+# ======================================================
 
 st.set_page_config(
     page_title="PNB Luxury Salon & Spa",
@@ -14,42 +14,57 @@ st.set_page_config(
     layout="wide"
 )
 
-# =========================================
+# ======================================================
 # FIREBASE
-# =========================================
+# ======================================================
 
 if not firebase_admin._apps:
 
-    cred = credentials.Certificate("firebase-key.json")
+    firebase_dict = {
+        "type": st.secrets["type"],
+        "project_id": st.secrets["project_id"],
+        "private_key_id": st.secrets["private_key_id"],
+        "private_key": st.secrets["private_key"],
+        "client_email": st.secrets["client_email"],
+        "client_id": st.secrets["client_id"],
+        "auth_uri": st.secrets["auth_uri"],
+        "token_uri": st.secrets["token_uri"],
+        "auth_provider_x509_cert_url":
+            st.secrets["auth_provider_x509_cert_url"],
+        "client_x509_cert_url":
+            st.secrets["client_x509_cert_url"]
+    }
+
+    cred = credentials.Certificate(firebase_dict)
 
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-# =========================================
+# ======================================================
 # AI CONFIG
-# =========================================
+# ======================================================
 
 AI_API_URL = st.secrets["AI_API_URL"]
 AI_API_KEY = st.secrets["AI_API_KEY"]
 
-# =========================================
+# ======================================================
 # AI TASK GENERATOR
-# =========================================
+# ======================================================
 
 def generate_ai_tasks(service, customer_name):
 
     prompt = f"""
     Customer booked: {service}
-    Customer name: {customer_name}
+    Customer Name: {customer_name}
 
     Generate:
-    - best worker role
+    - worker role
     - preparation steps
-    - estimated duration
+    - estimated time
     - materials required
 
-    Return professional salon instructions.
+    Keep it professional.
     """
 
     try:
@@ -72,7 +87,6 @@ def generate_ai_tasks(service, customer_name):
 
         data = response.json()
 
-        # Different APIs return different formats
         if "choices" in data:
             return data["choices"][0]["message"]["content"]
 
@@ -86,11 +100,11 @@ def generate_ai_tasks(service, customer_name):
 
     except Exception as e:
 
-        return f"AI generation failed: {e}"
+        return f"AI Error: {e}"
 
-# =========================================
+# ======================================================
 # ROLE MATCHING
-# =========================================
+# ======================================================
 
 def get_role(service):
 
@@ -118,9 +132,9 @@ def get_role(service):
 
     return "Salon Staff"
 
-# =========================================
+# ======================================================
 # SERVICES
-# =========================================
+# ======================================================
 
 services = {
 
@@ -161,15 +175,6 @@ services = {
         ("Bomb Pedicure","","₹2000"),
     ],
 
-    "Manicure & Nails":[
-        ("Basic Manicure","","₹300"),
-        ("Spa Manicure","","₹500"),
-        ("Crystal Spa Manicure","","₹750"),
-        ("Bomb Manicure","","₹1800"),
-        ("French Polish","","₹250"),
-        ("Gel Polish","","₹500"),
-    ],
-
     "Hair Treatments":[
         ("Keratin Treatment","","₹5000"),
         ("Express Keratin Treatment","","₹4500"),
@@ -178,32 +183,18 @@ services = {
         ("Smoothening","","₹4000"),
         ("Rebonding","","₹4500"),
         ("Straightening","","₹4500"),
-    ],
-
-    "Haircuts":[
-        ("Haircut Below 8 Years","","₹200"),
-        ("Basic Haircut","","₹250"),
-        ("Split Ends Haircut","","₹400"),
-        ("Advanced Haircut","","₹500"),
-    ],
-
-    "Face Packs":[
-        ("Young Face Pack","","₹300"),
-        ("White Face Pack","","₹300"),
-        ("Charcoal Pack","","₹350"),
-        ("Gold Facial","","₹800"),
     ]
 }
 
-# =========================================
+# ======================================================
 # CUSTOM CSS
-# =========================================
+# ======================================================
 
 st.markdown("""
 <style>
 
 .stApp{
-    background:linear-gradient(135deg,#0f0f0f,#171717);
+    background:linear-gradient(135deg,#0f0f0f,#181818);
     color:white;
 }
 
@@ -217,7 +208,7 @@ h1,h2,h3{
     border-radius:20px;
     margin-bottom:20px;
     border:1px solid rgba(255,255,255,0.08);
-    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    box-shadow:0 10px 25px rgba(0,0,0,0.3);
 }
 
 .price{
@@ -228,7 +219,6 @@ h1,h2,h3{
 
 .duration{
     color:#aaa;
-    margin-top:5px;
 }
 
 .dashboard-card{
@@ -242,22 +232,27 @@ h1,h2,h3{
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================
+# ======================================================
 # HEADER
-# =========================================
+# ======================================================
 
 st.markdown("""
 <div style='text-align:center;padding:30px;'>
-    <h1 style='font-size:60px;'>💎 PNB Luxury Salon & Spa</h1>
-    <p style='color:#bbb;font-size:20px;'>
-        Beauty • Wellness • Luxury
-    </p>
+
+<h1 style='font-size:60px;'>
+💎 PNB Luxury Salon & Spa
+</h1>
+
+<p style='color:#bbb;font-size:20px;'>
+Beauty • Wellness • Luxury
+</p>
+
 </div>
 """, unsafe_allow_html=True)
 
-# =========================================
+# ======================================================
 # SIDEBAR
-# =========================================
+# ======================================================
 
 page = st.sidebar.selectbox(
     "Navigation",
@@ -268,9 +263,9 @@ page = st.sidebar.selectbox(
     ]
 )
 
-# =========================================
-# SALON MENU
-# =========================================
+# ======================================================
+# MENU PAGE
+# ======================================================
 
 if page == "Salon Menu":
 
@@ -315,45 +310,68 @@ if page == "Salon Menu":
 
                         if customer_name and phone:
 
-                            role = get_role(service)
+                            try:
 
-                            with st.spinner(
-                                "AI assigning worker tasks..."
-                            ):
+                                role = get_role(service)
 
                                 ai_tasks = generate_ai_tasks(
                                     service,
                                     customer_name
                                 )
 
-                            db.collection("bookings").add({
+                                db.collection("bookings").add({
 
-                                "customer_name": customer_name,
-                                "phone": phone,
-                                "service": service,
-                                "category": category,
-                                "assigned_role": role,
-                                "ai_tasks": ai_tasks,
-                                "status": "Pending",
-                                "created_at": str(datetime.now())
+                                    "customer_name":
+                                        customer_name,
 
-                            })
+                                    "phone":
+                                        phone,
 
-                            st.success(
-                                "Booking Confirmed Successfully!"
-                            )
+                                    "service":
+                                        service,
 
-                            st.info(f"Assigned Role: {role}")
+                                    "category":
+                                        category,
 
-                            st.code(ai_tasks)
+                                    "assigned_role":
+                                        role,
+
+                                    "ai_tasks":
+                                        ai_tasks,
+
+                                    "status":
+                                        "Pending",
+
+                                    "created_at":
+                                        str(datetime.now())
+
+                                })
+
+                                st.success(
+                                    "Booking saved to Firebase!"
+                                )
+
+                                st.info(
+                                    f"Assigned Role: {role}"
+                                )
+
+                                st.code(ai_tasks)
+
+                            except Exception as e:
+
+                                st.error(
+                                    f"Firebase Error: {e}"
+                                )
 
                         else:
 
-                            st.error("Please fill all fields")
+                            st.error(
+                                "Please fill all fields"
+                            )
 
-# =========================================
+# ======================================================
 # WORKER DASHBOARD
-# =========================================
+# ======================================================
 
 elif page == "Worker Dashboard":
 
@@ -363,7 +381,9 @@ elif page == "Worker Dashboard":
         "Search Customer or Service"
     )
 
-    bookings_ref = db.collection("bookings").stream()
+    bookings_ref = db.collection(
+        "bookings"
+    ).stream()
 
     bookings = []
 
@@ -378,7 +398,10 @@ elif page == "Worker Dashboard":
 
         booking_text = str(booking).lower()
 
-        if search.lower() not in booking_text and search != "":
+        if (
+            search.lower() not in booking_text
+            and search != ""
+        ):
             continue
 
         st.markdown(f"""
@@ -422,7 +445,9 @@ elif page == "Worker Dashboard":
                 key=f"a_{booking.get('doc_id')}"
             ):
 
-                db.collection("bookings").document(
+                db.collection(
+                    "bookings"
+                ).document(
                     booking.get("doc_id")
                 ).update({
                     "status":"Accepted"
@@ -437,7 +462,9 @@ elif page == "Worker Dashboard":
                 key=f"c_{booking.get('doc_id')}"
             ):
 
-                db.collection("bookings").document(
+                db.collection(
+                    "bookings"
+                ).document(
                     booking.get("doc_id")
                 ).update({
                     "status":"Completed"
@@ -452,7 +479,9 @@ elif page == "Worker Dashboard":
                 key=f"d_{booking.get('doc_id')}"
             ):
 
-                db.collection("bookings").document(
+                db.collection(
+                    "bookings"
+                ).document(
                     booking.get("doc_id")
                 ).delete()
 
@@ -460,9 +489,9 @@ elif page == "Worker Dashboard":
 
         st.divider()
 
-# =========================================
+# ======================================================
 # ANALYTICS
-# =========================================
+# ======================================================
 
 elif page == "Analytics":
 
@@ -496,23 +525,9 @@ elif page == "Analytics":
     col3.metric("Accepted", accepted)
     col4.metric("Completed", completed)
 
-    st.subheader("Recent Bookings")
-
-    for d in docs[-10:]:
-
-        data = d.to_dict()
-
-        st.write(
-            data.get("customer_name"),
-            "-",
-            data.get("service"),
-            "-",
-            data.get("status")
-        )
-
-# =========================================
+# ======================================================
 # FOOTER
-# =========================================
+# ======================================================
 
 st.markdown("""
 <hr style='margin-top:50px;'>
