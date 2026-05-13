@@ -84,8 +84,11 @@ def generate_ai_tasks(service, customer_name):
     Customer name: {customer_name}
 
     In ONE SHORT PARAGRAPH ONLY:
-    explain the service briefly, preparation advice,
-    and duration. Keep luxurious and concise.
+    explain the service briefly,
+    preparation advice,
+    and duration.
+
+    Keep luxurious and concise.
     """
 
     try:
@@ -191,7 +194,7 @@ services = {
 }
 
 # ======================================================
-# CSS
+# CUSTOM CSS
 # ======================================================
 
 st.markdown("""
@@ -257,7 +260,6 @@ mode = st.sidebar.radio(
     "Select Mode",
     [
         "Customer",
-        "Customer Confirmation",
         "Worker Login"
     ]
 )
@@ -417,95 +419,6 @@ if mode == "Customer":
                             )
 
 # ======================================================
-# CUSTOMER CONFIRMATION
-# ======================================================
-
-elif mode == "Customer Confirmation":
-
-    st.title("✅ Confirm Your Service")
-
-    customer_name_confirm = st.text_input(
-        "Customer Name"
-    )
-
-    customer_phone_confirm = st.text_input(
-        "Customer Phone"
-    )
-
-    if st.button("Load My Services"):
-
-        confirm_docs = db.collection(
-            "bookings"
-        ).stream()
-
-        found = False
-
-        for doc in confirm_docs:
-
-            booking = doc.to_dict()
-
-            if (
-                booking.get("customer_name")
-                == customer_name_confirm
-                and
-                booking.get("phone")
-                == customer_phone_confirm
-                and
-                booking.get("status")
-                ==
-                "Awaiting Customer Confirmation"
-            ):
-
-                found = True
-
-                st.success(
-                    f"""
-                    Was your
-                    {booking.get('service')}
-                    completed successfully?
-                    """
-                )
-
-                st.info(
-                    booking.get("ai_tasks")
-                )
-
-                if st.button(
-                    f"YES Complete {doc.id}",
-                    key=f"confirm_{doc.id}"
-                ):
-
-                    try:
-
-                        booking["status"] = "Completed"
-
-                        db.collection(
-                            "completed_bookings"
-                        ).document(doc.id).set(booking)
-
-                        db.collection(
-                            "bookings"
-                        ).document(doc.id).delete()
-
-                        st.success(
-                            "Booking completed and removed!"
-                        )
-
-                        st.rerun()
-
-                    except Exception as e:
-
-                        st.error(
-                            f"Delete Error: {e}"
-                        )
-
-        if not found:
-
-            st.warning(
-                "No pending confirmations found."
-            )
-
-# ======================================================
 # WORKER LOGIN
 # ======================================================
 
@@ -610,20 +523,29 @@ elif mode == "Worker Login":
                     key=f"complete_{doc.id}"
                 ):
 
-                    db.collection(
-                        "bookings"
-                    ).document(
-                        doc.id
-                    ).update({
-                        "status":
-                        "Awaiting Customer Confirmation"
-                    })
+                    try:
 
-                    st.success(
-                        "Waiting for customer confirmation."
-                    )
+                        booking["status"] = "Completed"
 
-                    st.rerun()
+                        db.collection(
+                            "completed_bookings"
+                        ).document(doc.id).set(booking)
+
+                        db.collection(
+                            "bookings"
+                        ).document(doc.id).delete()
+
+                        st.success(
+                            "Task completed and deleted!"
+                        )
+
+                        st.rerun()
+
+                    except Exception as e:
+
+                        st.error(
+                            f"Delete Error: {e}"
+                        )
 
     elif password != "":
 
