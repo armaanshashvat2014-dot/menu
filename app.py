@@ -1,6 +1,4 @@
 # Advanced PNB Luxury Salon & Spa - Full app.py
-
-```python
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
