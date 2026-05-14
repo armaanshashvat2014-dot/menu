@@ -9,8 +9,8 @@ from datetime import datetime
 # ======================================================
 
 st.set_page_config(
-    page_title="PNB Luxury Salon & Spa",
-    page_icon="💎",
+    page_title="PNB Luxury & Smart Salon",
+    page_icon="✨",
     layout="wide"
 )
 
@@ -52,7 +52,7 @@ AI_API_KEY = st.secrets["AI_API_KEY"]
 # PASSWORD
 # ======================================================
 
-WORKER_PASSWORD = "PNBWORKER123"
+WORKER_PASSWORD = "SALONSMART123"
 
 # ======================================================
 # TIME SLOTS
@@ -74,12 +74,10 @@ TIME_SLOTS = [
 ]
 
 # ======================================================
-# HUGE FULL MENU
+# SERVICES
 # ======================================================
 
 services = [
-
-    # MASSAGES
 
     {
         "name":"Ayurvedic Massage 45 mins",
@@ -107,17 +105,7 @@ services = [
         "price":2000,
         "role":"Massage Expert",
         "category":"Massage",
-        "description":"Luxury aroma therapy massage.",
-        "image":"https://images.unsplash.com/photo-1515377905703-c4788e51af15"
-    },
-
-    {
-        "name":"Aroma Therapy 60 mins",
-        "duration":"60 mins",
-        "price":2500,
-        "role":"Massage Expert",
-        "category":"Massage",
-        "description":"Extended aroma therapy session.",
+        "description":"Luxury aroma therapy session.",
         "image":"https://images.unsplash.com/photo-1515377905703-c4788e51af15"
     },
 
@@ -132,107 +120,13 @@ services = [
     },
 
     {
-        "name":"Body Polish",
-        "duration":"60 mins",
-        "price":3500,
-        "role":"Massage Expert",
-        "category":"Spa",
-        "description":"Luxury skin polishing treatment.",
-        "image":"https://images.unsplash.com/photo-1515377905703-c4788e51af15"
-    },
-
-    {
-        "name":"Hand Massage",
-        "duration":"20 mins",
-        "price":250,
-        "role":"Massage Expert",
-        "category":"Massage",
-        "description":"Relaxing hand massage.",
-        "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
-    },
-
-    {
-        "name":"Foot Work Massage",
-        "duration":"30 mins",
-        "price":300,
-        "role":"Massage Expert",
-        "category":"Massage",
-        "description":"Luxury foot massage therapy.",
-        "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
-    },
-
-    {
-        "name":"Back Energy Massage",
-        "duration":"30 mins",
-        "price":400,
-        "role":"Massage Expert",
-        "category":"Massage",
-        "description":"Back muscle recovery therapy.",
-        "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
-    },
-
-    # PIERCINGS
-
-    {
-        "name":"Wart Removal",
-        "duration":"20 mins",
-        "price":200,
-        "role":"Salon Staff",
-        "category":"Piercing",
-        "description":"Professional wart removal.",
-        "image":"https://images.unsplash.com/photo-1519824145371-296894a0daa9"
-    },
-
-    {
-        "name":"Nose Piercing",
-        "duration":"20 mins",
-        "price":600,
-        "role":"Salon Staff",
-        "category":"Piercing",
-        "description":"Safe nose piercing service.",
-        "image":"https://images.unsplash.com/photo-1521572267360-ee0c2909d518"
-    },
-
-    {
-        "name":"Ear Piercing Single",
-        "duration":"20 mins",
-        "price":800,
-        "role":"Salon Staff",
-        "category":"Piercing",
-        "description":"Single ear piercing.",
-        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
-    },
-
-    {
-        "name":"Double Ear Piercing",
-        "duration":"25 mins",
-        "price":1200,
-        "role":"Salon Staff",
-        "category":"Piercing",
-        "description":"Double ear piercing styling.",
-        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
-    },
-
-    # MAKEUP
-
-    {
-        "name":"Mehandi",
-        "duration":"45 mins",
-        "price":500,
+        "name":"Bridal Makeup",
+        "duration":"120 mins",
+        "price":7500,
         "role":"Makeup Artist",
         "category":"Makeup",
-        "description":"Traditional mehandi designs.",
-        "image":"https://images.unsplash.com/photo-1596704017254-9758d0f1a8db"
-    },
-
-    {
-        "name":"Light Makeup",
-        "duration":"45 mins",
-        "price":2500,
-        "role":"Makeup Artist",
-        "category":"Makeup",
-        "description":"Elegant light makeup.",
-        "image":"https://images.unsplash.com/photo-1487412947147-5cebf100ffc2"
+        "description":"Luxury bridal makeover package.",
+        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
     },
 
     {
@@ -241,102 +135,18 @@ services = [
         "price":3500,
         "role":"Makeup Artist",
         "category":"Makeup",
-        "description":"Party glam makeup.",
+        "description":"Elegant glam party makeup.",
         "image":"https://images.unsplash.com/photo-1487412947147-5cebf100ffc2"
     },
 
     {
-        "name":"Bridal Trial Makeup",
-        "duration":"60 mins",
-        "price":2500,
-        "role":"Makeup Artist",
-        "category":"Makeup",
-        "description":"Trial bridal makeup.",
-        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
-    },
-
-    {
-        "name":"Bridal Makeup",
-        "duration":"120 mins",
-        "price":7500,
-        "role":"Makeup Artist",
-        "category":"Makeup",
-        "description":"Premium bridal package.",
-        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
-    },
-
-    {
-        "name":"Reception Makeup",
-        "duration":"90 mins",
+        "name":"Keratin Treatment",
+        "duration":"2 Hours",
         "price":5000,
-        "role":"Makeup Artist",
-        "category":"Makeup",
-        "description":"Reception glam makeover.",
-        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
-    },
-
-    # SAREE
-
-    {
-        "name":"Half Saree Draping",
-        "duration":"30 mins",
-        "price":300,
-        "role":"Salon Staff",
-        "category":"Saree",
-        "description":"Half saree styling.",
-        "image":"https://images.unsplash.com/photo-1610030469983-98e550d6193c"
-    },
-
-    {
-        "name":"Saree Draping",
-        "duration":"45 mins",
-        "price":500,
-        "role":"Salon Staff",
-        "category":"Saree",
-        "description":"Luxury saree draping.",
-        "image":"https://images.unsplash.com/photo-1610030469983-98e550d6193c"
-    },
-
-    {
-        "name":"Saree Preplating",
-        "duration":"45 mins",
-        "price":700,
-        "role":"Salon Staff",
-        "category":"Saree",
-        "description":"Professional saree preplating.",
-        "image":"https://images.unsplash.com/photo-1610030469983-98e550d6193c"
-    },
-
-    # PEDICURE
-
-    {
-        "name":"Basic Pedicure",
-        "duration":"45 mins",
-        "price":500,
-        "role":"Nail Technician",
-        "category":"Pedicure",
-        "description":"Basic foot care.",
-        "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
-    },
-
-    {
-        "name":"Spa Pedicure",
-        "duration":"60 mins",
-        "price":600,
-        "role":"Nail Technician",
-        "category":"Pedicure",
-        "description":"Relaxing spa pedicure.",
-        "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
-    },
-
-    {
-        "name":"Crystal Pedicure",
-        "duration":"60 mins",
-        "price":900,
-        "role":"Nail Technician",
-        "category":"Pedicure",
-        "description":"Crystal spa pedicure.",
-        "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
+        "role":"Hair Stylist",
+        "category":"Hair",
+        "description":"Premium keratin hair treatment.",
+        "image":"https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f"
     },
 
     {
@@ -344,9 +154,19 @@ services = [
         "duration":"90 mins",
         "price":2000,
         "role":"Nail Technician",
-        "category":"Pedicure",
-        "description":"Premium bomb pedicure.",
+        "category":"Nails",
+        "description":"Luxury bomb pedicure.",
         "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
+    },
+
+    {
+        "name":"Basic Haircut",
+        "duration":"30 mins",
+        "price":250,
+        "role":"Hair Stylist",
+        "category":"Hair",
+        "description":"Classic stylish haircut.",
+        "image":"https://images.unsplash.com/photo-1517832606299-7ae9b720a186"
     }
 
 ]
@@ -359,26 +179,32 @@ st.markdown("""
 <style>
 
 .stApp{
-    background:linear-gradient(135deg,#0f0f0f,#1c1c1c);
+    background:linear-gradient(135deg,#0f0f0f,#1b1b1b);
     color:white;
 }
 
 .service-card{
-    background:#1b1b1b;
+    background:#1e1e1e;
     padding:20px;
     border-radius:20px;
     margin-bottom:20px;
     border:1px solid rgba(255,255,255,0.08);
 }
 
-.service-card:hover{
-    transform:translateY(-5px);
-}
-
 .price{
     color:#d4af37;
     font-size:24px;
     font-weight:bold;
+}
+
+.ai-circle button{
+    border-radius:50% !important;
+    height:60px !important;
+    width:60px !important;
+    font-size:28px !important;
+    background:#d4af37 !important;
+    color:black !important;
+    border:none !important;
 }
 
 </style>
@@ -393,11 +219,11 @@ st.markdown("""
 <div style='text-align:center;padding:20px;'>
 
 <h1 style='font-size:60px;color:#d4af37;'>
-💎 PNB Luxury Salon & Spa
+✨ SalonSmart
 </h1>
 
-<p style='color:#bbb;font-size:20px;'>
-Beauty • Wellness • Luxury
+<p style='font-size:20px;color:#bbb;'>
+AI Powered Luxury Salon Platform
 </p>
 
 </div>
@@ -409,7 +235,7 @@ Beauty • Wellness • Luxury
 # ======================================================
 
 mode = st.sidebar.radio(
-    "Select Mode",
+    "Choose",
     [
         "Customer",
         "My Bookings",
@@ -425,9 +251,39 @@ if mode == "Customer":
 
     st.title("Luxury Services")
 
-    search = st.text_input(
-        "Search Services"
-    )
+    # ==================================================
+    # SEARCH + AI BUTTON
+    # ==================================================
+
+    col1, col2 = st.columns([10,1])
+
+    with col1:
+
+        search = st.text_input(
+            "Search Services"
+        )
+
+    with col2:
+
+        st.markdown(
+            "<div class='ai-circle'>",
+            unsafe_allow_html=True
+        )
+
+        if st.button("✨"):
+
+            st.session_state[
+                "open_ai"
+            ] = True
+
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True
+        )
+
+    # ==================================================
+    # CATEGORY
+    # ==================================================
 
     categories = sorted(
         list(
@@ -440,10 +296,14 @@ if mode == "Customer":
         )
     )
 
-    selected_category = st.selectbox(
+    category = st.selectbox(
         "Filter Category",
         ["All"] + categories
     )
+
+    # ==================================================
+    # SERVICES
+    # ==================================================
 
     cols = st.columns(3)
 
@@ -452,9 +312,9 @@ if mode == "Customer":
     for s in services:
 
         if (
-            selected_category != "All"
+            category != "All"
             and
-            s["category"] != selected_category
+            s["category"] != category
         ):
             continue
 
@@ -469,6 +329,11 @@ if mode == "Customer":
     for i, service in enumerate(filtered):
 
         with cols[i % 3]:
+
+            st.markdown(
+                "<div class='service-card'>",
+                unsafe_allow_html=True
+            )
 
             st.image(
                 service["image"]
@@ -500,8 +365,13 @@ if mode == "Customer":
                     "selected_service"
                 ] = service
 
+            st.markdown(
+                "</div>",
+                unsafe_allow_html=True
+            )
+
     # ==================================================
-    # POPUP
+    # SERVICE POPUP
     # ==================================================
 
     if "selected_service" in st.session_state:
@@ -523,13 +393,11 @@ if mode == "Customer":
             )
 
             st.write(
-                f"Duration: "
-                f"{selected['duration']}"
+                f"⏱ {selected['duration']}"
             )
 
             st.write(
-                f"Price: "
-                f"₹{selected['price']}"
+                f"💰 ₹{selected['price']}"
             )
 
             booking_date = st.date_input(
@@ -572,16 +440,10 @@ if mode == "Customer":
                 if slot_count >= 4:
 
                     st.error(
-                        "Slot occupied"
+                        "Slot occupied."
                     )
 
                 else:
-
-                    prompt = f"""
-                    Explain
-                    {selected['name']}
-                    briefly.
-                    """
 
                     try:
 
@@ -598,12 +460,15 @@ if mode == "Customer":
                             },
 
                             json={
+
                                 "messages":[
                                     {
                                         "role":"user",
-                                        "content":prompt
+                                        "content":
+                                        f"Explain {selected['name']} briefly."
                                     }
                                 ],
+
                                 "generateImage": True
                             }
                         )
@@ -652,6 +517,69 @@ if mode == "Customer":
                         )
 
         popup()
+
+    # ==================================================
+    # AI POPUP
+    # ==================================================
+
+    if st.session_state.get("open_ai"):
+
+        @st.dialog("✨ SalonSmart AI")
+
+        def ai_popup():
+
+            st.write(
+                "Ask about hair, beauty, skin, makeup or services."
+            )
+
+            user_question = st.text_input(
+                "Your Question"
+            )
+
+            if st.button("Ask AI"):
+
+                if user_question.strip() != "":
+
+                    try:
+
+                        response = requests.post(
+
+                            AI_API_URL,
+
+                            headers={
+
+                                "Authorization":
+                                f"Bearer {AI_API_KEY}",
+
+                                "Content-Type":
+                                "application/json"
+                            },
+
+                            json={
+
+                                "messages":[
+                                    {
+                                        "role":"user",
+                                        "content":
+                                        user_question
+                                    }
+                                ]
+                            }
+                        )
+
+                        st.success(
+                            "SalonSmart AI"
+                        )
+
+                        st.write(
+                            response.json()
+                        )
+
+                    except Exception as e:
+
+                        st.error(str(e))
+
+        ai_popup()
 
 # ======================================================
 # MY BOOKINGS
@@ -711,7 +639,7 @@ elif mode == "My Bookings":
                     ).delete()
 
                     st.success(
-                        "Booking cancelled"
+                        "Booking cancelled."
                     )
 
                     st.rerun()
@@ -719,7 +647,7 @@ elif mode == "My Bookings":
         if not found:
 
             st.warning(
-                "No bookings found"
+                "No bookings found."
             )
 
 # ======================================================
@@ -878,8 +806,7 @@ elif mode == "Worker Login":
                     )
 
                     st.success(
-                        "Customer earned "
-                        "5 points!"
+                        "Customer earned 5 points!"
                     )
 
                     st.rerun()
@@ -897,13 +824,7 @@ st.markdown("""
 Powered by
 
 <span style='color:#d4af37;font-weight:bold;'>
-MentorLoop EDU
-</span>
-
-and
-
-<span style='color:#d4af37;font-weight:bold;'>
-PNB
+SalonSmart
 </span>
 
 </div>
