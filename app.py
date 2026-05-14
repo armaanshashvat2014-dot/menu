@@ -9,7 +9,7 @@ from datetime import datetime
 # ======================================================
 
 st.set_page_config(
-    page_title="PNB Luxury & Smart Salon",
+    page_title="SalonSmart",
     page_icon="✨",
     layout="wide"
 )
@@ -42,7 +42,7 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 # ======================================================
-# API CONFIG
+# API
 # ======================================================
 
 AI_API_URL = st.secrets["AI_API_URL"]
@@ -53,6 +53,16 @@ AI_API_KEY = st.secrets["AI_API_KEY"]
 # ======================================================
 
 WORKER_PASSWORD = "SALONSMART123"
+
+# ======================================================
+# SESSION STATE
+# ======================================================
+
+if "selected_service" not in st.session_state:
+    st.session_state["selected_service"] = None
+
+if "open_ai" not in st.session_state:
+    st.session_state["open_ai"] = False
 
 # ======================================================
 # TIME SLOTS
@@ -100,7 +110,7 @@ services = [
     },
 
     {
-        "name":"Aroma Therapy 45 mins",
+        "name":"Aroma Therapy",
         "duration":"45 mins",
         "price":2000,
         "role":"Massage Expert",
@@ -145,7 +155,7 @@ services = [
         "price":5000,
         "role":"Hair Stylist",
         "category":"Hair",
-        "description":"Premium keratin hair treatment.",
+        "description":"Premium keratin treatment.",
         "image":"https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f"
     },
 
@@ -157,16 +167,6 @@ services = [
         "category":"Nails",
         "description":"Luxury bomb pedicure.",
         "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
-    },
-
-    {
-        "name":"Basic Haircut",
-        "duration":"30 mins",
-        "price":250,
-        "role":"Hair Stylist",
-        "category":"Hair",
-        "description":"Classic stylish haircut.",
-        "image":"https://images.unsplash.com/photo-1517832606299-7ae9b720a186"
     }
 
 ]
@@ -187,8 +187,8 @@ st.markdown("""
     background:#1e1e1e;
     padding:20px;
     border-radius:20px;
-    margin-bottom:20px;
     border:1px solid rgba(255,255,255,0.08);
+    margin-bottom:20px;
 }
 
 .price{
@@ -222,7 +222,7 @@ st.markdown("""
 ✨ SalonSmart
 </h1>
 
-<p style='font-size:20px;color:#bbb;'>
+<p style='color:#bbb;font-size:20px;'>
 AI Powered Luxury Salon Platform
 </p>
 
@@ -273,6 +273,10 @@ if mode == "Customer":
         if st.button("✨"):
 
             st.session_state[
+                "selected_service"
+            ] = None
+
+            st.session_state[
                 "open_ai"
             ] = True
 
@@ -282,7 +286,7 @@ if mode == "Customer":
         )
 
     # ==================================================
-    # CATEGORY
+    # FILTER
     # ==================================================
 
     categories = sorted(
@@ -305,8 +309,6 @@ if mode == "Customer":
     # SERVICES
     # ==================================================
 
-    cols = st.columns(3)
-
     filtered = []
 
     for s in services:
@@ -326,6 +328,8 @@ if mode == "Customer":
 
         filtered.append(s)
 
+    cols = st.columns(3)
+
     for i, service in enumerate(filtered):
 
         with cols[i % 3]:
@@ -335,9 +339,7 @@ if mode == "Customer":
                 unsafe_allow_html=True
             )
 
-            st.image(
-                service["image"]
-            )
+            st.image(service["image"])
 
             st.markdown(
                 f"### {service['name']}"
@@ -362,6 +364,10 @@ if mode == "Customer":
             ):
 
                 st.session_state[
+                    "open_ai"
+                ] = False
+
+                st.session_state[
                     "selected_service"
                 ] = service
 
@@ -374,7 +380,9 @@ if mode == "Customer":
     # SERVICE POPUP
     # ==================================================
 
-    if "selected_service" in st.session_state:
+    if st.session_state[
+        "selected_service"
+    ] is not None:
 
         selected = st.session_state[
             "selected_service"
@@ -382,7 +390,7 @@ if mode == "Customer":
 
         @st.dialog(selected["name"])
 
-        def popup():
+        def service_popup():
 
             st.image(
                 selected["image"]
@@ -512,31 +520,41 @@ if mode == "Customer":
 
                     except Exception as e:
 
-                        st.error(
-                            str(e)
-                        )
+                        st.error(str(e))
 
-        popup()
+            if st.button(
+                "Close"
+            ):
+
+                st.session_state[
+                    "selected_service"
+                ] = None
+
+                st.rerun()
+
+        service_popup()
 
     # ==================================================
     # AI POPUP
     # ==================================================
 
-    if st.session_state.get("open_ai"):
+    if st.session_state["open_ai"]:
 
         @st.dialog("✨ SalonSmart AI")
 
         def ai_popup():
 
             st.write(
-                "Ask about hair, beauty, skin, makeup or services."
+                "Ask about beauty, hair, makeup or skincare."
             )
 
             user_question = st.text_input(
                 "Your Question"
             )
 
-            if st.button("Ask AI"):
+            if st.button(
+                "Ask AI"
+            ):
 
                 if user_question.strip() != "":
 
@@ -579,6 +597,16 @@ if mode == "Customer":
 
                         st.error(str(e))
 
+            if st.button(
+                "Close AI"
+            ):
+
+                st.session_state[
+                    "open_ai"
+                ] = False
+
+                st.rerun()
+
         ai_popup()
 
 # ======================================================
@@ -616,15 +644,21 @@ elif mode == "My Bookings":
                 )
 
                 st.write(
-                    booking.get("booking_date")
+                    booking.get(
+                        "booking_date"
+                    )
                 )
 
                 st.write(
-                    booking.get("time_slot")
+                    booking.get(
+                        "time_slot"
+                    )
                 )
 
                 st.write(
-                    booking.get("status")
+                    booking.get(
+                        "status"
+                    )
                 )
 
                 if st.button(
@@ -673,8 +707,7 @@ elif mode == "Worker Login":
                 "Massage Expert",
                 "Makeup Artist",
                 "Hair Stylist",
-                "Nail Technician",
-                "Salon Staff"
+                "Nail Technician"
             ]
         )
 
