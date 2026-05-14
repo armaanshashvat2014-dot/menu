@@ -1410,7 +1410,7 @@ st.markdown("""
     <div class='gold-divider'></div>
     <p>
         Crafted with elegance by
-        <span>PNB Smart &amp; Luxurious Salon</span>
+        <span>PNB Smart &amp; Luxurious Salon and MentorLoop EDU</span>
         &nbsp;·&nbsp; AI-Powered Beauty Experience
     </p>
 </div>
