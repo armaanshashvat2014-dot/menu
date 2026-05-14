@@ -42,7 +42,7 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 # ======================================================
-# API
+# API CONFIG
 # ======================================================
 
 AI_API_URL = st.secrets["AI_API_URL"]
@@ -90,22 +90,12 @@ TIME_SLOTS = [
 services = [
 
     {
-        "name":"Ayurvedic Massage 45 mins",
+        "name":"Ayurvedic Massage",
         "duration":"45 mins",
         "price":1500,
         "role":"Massage Expert",
         "category":"Massage",
         "description":"Traditional Ayurvedic herbal massage.",
-        "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
-    },
-
-    {
-        "name":"Ayurvedic Massage 60 mins",
-        "duration":"60 mins",
-        "price":1800,
-        "role":"Massage Expert",
-        "category":"Massage",
-        "description":"Extended Ayurvedic rejuvenation massage.",
         "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
     },
 
@@ -167,6 +157,16 @@ services = [
         "category":"Nails",
         "description":"Luxury bomb pedicure.",
         "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
+    },
+
+    {
+        "name":"Basic Haircut",
+        "duration":"30 mins",
+        "price":250,
+        "role":"Hair Stylist",
+        "category":"Hair",
+        "description":"Classic stylish haircut.",
+        "image":"https://images.unsplash.com/photo-1517832606299-7ae9b720a186"
     }
 
 ]
@@ -244,7 +244,7 @@ mode = st.sidebar.radio(
 )
 
 # ======================================================
-# CUSTOMER
+# CUSTOMER MODE
 # ======================================================
 
 if mode == "Customer":
@@ -286,7 +286,7 @@ if mode == "Customer":
         )
 
     # ==================================================
-    # FILTER
+    # CATEGORY FILTER
     # ==================================================
 
     categories = sorted(
@@ -306,7 +306,7 @@ if mode == "Customer":
     )
 
     # ==================================================
-    # SERVICES
+    # FILTER SERVICES
     # ==================================================
 
     filtered = []
@@ -327,6 +327,10 @@ if mode == "Customer":
             continue
 
         filtered.append(s)
+
+    # ==================================================
+    # DISPLAY SERVICES
+    # ==================================================
 
     cols = st.columns(3)
 
@@ -481,6 +485,16 @@ if mode == "Customer":
                             }
                         )
 
+                        data = response.json()
+
+                        ai_reply = data[
+                            "choices"
+                        ][0][
+                            "message"
+                        ][
+                            "content"
+                        ]
+
                         db.collection(
                             "bookings"
                         ).add({
@@ -514,8 +528,8 @@ if mode == "Customer":
                             "Booking confirmed!"
                         )
 
-                        st.write(
-                            response.json()
+                        st.markdown(
+                            ai_reply
                         )
 
                     except Exception as e:
@@ -545,7 +559,7 @@ if mode == "Customer":
         def ai_popup():
 
             st.write(
-                "Ask about beauty, hair, makeup or skincare."
+                "Ask about beauty, skincare, makeup or hair."
             )
 
             user_question = st.text_input(
@@ -585,12 +599,18 @@ if mode == "Customer":
                             }
                         )
 
-                        st.success(
-                            "SalonSmart AI"
-                        )
+                        data = response.json()
 
-                        st.write(
-                            response.json()
+                        ai_reply = data[
+                            "choices"
+                        ][0][
+                            "message"
+                        ][
+                            "content"
+                        ]
+
+                        st.markdown(
+                            ai_reply
                         )
 
                     except Exception as e:
