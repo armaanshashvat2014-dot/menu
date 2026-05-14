@@ -49,7 +49,7 @@ AI_API_URL = st.secrets["AI_API_URL"]
 AI_API_KEY = st.secrets["AI_API_KEY"]
 
 # ======================================================
-# WORKER PASSWORD
+# PASSWORD
 # ======================================================
 
 WORKER_PASSWORD = "PNBWORKER123"
@@ -219,6 +219,10 @@ if mode == "Customer":
 
     st.title("Luxury Services")
 
+    # ==================================================
+    # LOYALTY POINTS
+    # ==================================================
+
     st.subheader("🎁 Loyalty Points")
 
     check_phone = st.text_input(
@@ -227,28 +231,40 @@ if mode == "Customer":
 
     if st.button("Load Points"):
 
-        points_doc = db.collection(
-            "loyalty_points"
-        ).document(
-            check_phone
-        ).get()
+        if check_phone.strip() == "":
 
-        if points_doc.exists:
-
-            points = points_doc.to_dict().get(
-                "points",
-                0
-            )
-
-            st.success(
-                f"You have {points} points!"
+            st.error(
+                "Please enter phone number."
             )
 
         else:
 
-            st.warning(
-                "No points yet."
-            )
+            points_doc = db.collection(
+                "loyalty_points"
+            ).document(
+                check_phone
+            ).get()
+
+            if points_doc.exists:
+
+                points = points_doc.to_dict().get(
+                    "points",
+                    0
+                )
+
+                st.success(
+                    f"You have {points} points!"
+                )
+
+            else:
+
+                st.warning(
+                    "No points yet."
+                )
+
+    # ==================================================
+    # SERVICE CARDS
+    # ==================================================
 
     cols = st.columns(3)
 
