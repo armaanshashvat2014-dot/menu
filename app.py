@@ -1,4 +1,3 @@
-# Advanced PNB Luxury Salon & Spa - Full app.py
 import streamlit as st
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -30,18 +29,15 @@ if not firebase_admin._apps:
         "client_id": st.secrets["client_id"],
         "auth_uri": st.secrets["auth_uri"],
         "token_uri": st.secrets["token_uri"],
-        "auth_provider_x509_cert_url": st.secrets[
-            "auth_provider_x509_cert_url"
-        ],
-        "client_x509_cert_url": st.secrets[
-            "client_x509_cert_url"
-        ]
+        "auth_provider_x509_cert_url":
+            st.secrets["auth_provider_x509_cert_url"],
+        "client_x509_cert_url":
+            st.secrets["client_x509_cert_url"]
     }
 
     cred = credentials.Certificate(firebase_dict)
 
     firebase_admin.initialize_app(cred)
-
 
 db = firestore.client()
 
@@ -86,73 +82,67 @@ services = {
     "Ayurvedic Massage": {
         "duration": "45 / 60 mins",
         "price": 1500,
-        "points": 150,
-        "image": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874",
-        "description": "Relaxing Ayurvedic therapy using warm herbal oils to refresh body and mind.",
-        "role": "Massage Expert"
+        "image":
+        "https://images.unsplash.com/photo-1544161515-4ab6ce6db874",
+        "description":
+        "Relaxing Ayurvedic therapy using herbal oils.",
+        "role":
+        "Massage Expert"
     },
 
     "Aroma Therapy": {
         "duration": "45 / 60 mins",
         "price": 2000,
-        "points": 200,
-        "image": "https://images.unsplash.com/photo-1515377905703-c4788e51af15",
-        "description": "Luxury aroma oil massage designed for stress relief and deep relaxation.",
-        "role": "Massage Expert"
+        "image":
+        "https://images.unsplash.com/photo-1515377905703-c4788e51af15",
+        "description":
+        "Luxury aroma oil therapy for stress relief.",
+        "role":
+        "Massage Expert"
     },
 
     "Deep Tissue Massage": {
         "duration": "60 mins",
         "price": 3000,
-        "points": 300,
-        "image": "https://images.unsplash.com/photo-1519823551278-64ac92734fb1",
-        "description": "Professional pressure-based massage targeting deep muscle tension.",
-        "role": "Massage Expert"
+        "image":
+        "https://images.unsplash.com/photo-1519823551278-64ac92734fb1",
+        "description":
+        "Deep muscle pressure therapy.",
+        "role":
+        "Massage Expert"
     },
 
     "Bridal Makeup": {
         "duration": "2 Hours",
         "price": 7500,
-        "points": 750,
-        "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
-        "description": "Premium bridal makeover package with luxury finishing.",
-        "role": "Makeup Artist"
-    },
-
-    "Party Makeup": {
-        "duration": "1 Hour",
-        "price": 3500,
-        "points": 350,
-        "image": "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2",
-        "description": "Elegant glam makeup for parties and special occasions.",
-        "role": "Makeup Artist"
+        "image":
+        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1",
+        "description":
+        "Luxury bridal makeover package.",
+        "role":
+        "Makeup Artist"
     },
 
     "Keratin Treatment": {
         "duration": "2 Hours",
         "price": 5000,
-        "points": 500,
-        "image": "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f",
-        "description": "Advanced keratin smoothing treatment for silky hair.",
-        "role": "Hair Stylist"
-    },
-
-    "Smoothening": {
-        "duration": "2 Hours",
-        "price": 4000,
-        "points": 400,
-        "image": "https://images.unsplash.com/photo-1562322140-8baeececf3df",
-        "description": "Professional smoothening treatment for frizz-free hair.",
-        "role": "Hair Stylist"
+        "image":
+        "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f",
+        "description":
+        "Advanced keratin smoothing treatment.",
+        "role":
+        "Hair Stylist"
     },
 
     "Bomb Pedicure": {
         "duration": "1 Hour",
         "price": 2000,
-        "points": 200,
-        "image": "https://images.unsplash.com/photo-1519014816548-bf5fe059798b",
-        "description": "Luxury spa pedicure with deep exfoliation and relaxation.",
-        "role": "Nail Technician"
+        "image":
+        "https://images.unsplash.com/photo-1519014816548-bf5fe059798b",
+        "description":
+        "Luxury spa pedicure experience.",
+        "role":
+        "Nail Technician"
     }
 }
 
@@ -160,8 +150,7 @@ services = {
 # CSS
 # ======================================================
 
-st.markdown(
-    """
+st.markdown("""
 <style>
 
 .stApp{
@@ -188,36 +177,29 @@ st.markdown(
     font-weight:bold;
 }
 
-.points{
-    color:#4ade80;
-    font-weight:bold;
-}
-
 </style>
-""",
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 # ======================================================
 # HEADER
 # ======================================================
 
-st.markdown(
-    """
+st.markdown("""
 <div style='text-align:center;padding:20px;'>
+
 <h1 style='font-size:60px;color:#d4af37;'>
 💎 PNB Luxury Salon & Spa
 </h1>
+
 <p style='color:#bbb;font-size:20px;'>
 Beauty • Wellness • Luxury
 </p>
+
 </div>
-""",
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 # ======================================================
-# MODES
+# SIDEBAR
 # ======================================================
 
 mode = st.sidebar.radio(
@@ -230,18 +212,43 @@ mode = st.sidebar.radio(
 )
 
 # ======================================================
-# CUSTOMER MODE
+# CUSTOMER
 # ======================================================
 
 if mode == "Customer":
 
     st.title("Luxury Services")
 
-    customer_points = st.number_input(
-        "Your Loyalty Points",
-        min_value=0,
-        value=0
+    st.subheader("🎁 Loyalty Points")
+
+    check_phone = st.text_input(
+        "Enter Phone Number"
     )
+
+    if st.button("Load Points"):
+
+        points_doc = db.collection(
+            "loyalty_points"
+        ).document(
+            check_phone
+        ).get()
+
+        if points_doc.exists:
+
+            points = points_doc.to_dict().get(
+                "points",
+                0
+            )
+
+            st.success(
+                f"You have {points} points!"
+            )
+
+        else:
+
+            st.warning(
+                "No points yet."
+            )
 
     cols = st.columns(3)
 
@@ -249,45 +256,48 @@ if mode == "Customer":
 
         with cols[i % 3]:
 
-            st.markdown(
-                f"""
-<div class='service-card'>
+            st.markdown(f"""
+            <div class='service-card'>
 
-<img src='{data['image']}' class='service-image'>
+            <img src='{data["image"]}'
+            class='service-image'>
 
-<h2 style='color:#d4af37;'>
-{service}
-</h2>
+            <h2 style='color:#d4af37;'>
+            {service}
+            </h2>
 
-<p>{data['description']}</p>
+            <p>{data["description"]}</p>
 
-<p><b>Duration:</b> {data['duration']}</p>
+            <p>
+            <b>Duration:</b>
+            {data["duration"]}
+            </p>
 
-<div class='price'>₹{data['price']}</div>
+            <div class='price'>
+            ₹{data["price"]}
+            </div>
 
-<div class='points'>
-Points Needed: {data['points']}
-</div>
-
-</div>
-""",
-                unsafe_allow_html=True
-            )
+            </div>
+            """, unsafe_allow_html=True)
 
             if st.button(
-                f"Open {service}",
+                f"✨ Open {service}",
                 key=f"open_{service}"
             ):
 
-                st.session_state["selected_service"] = service
+                st.session_state[
+                    "selected_service"
+                ] = service
 
     # ==================================================
-    # POPUP / DETAILS
+    # SERVICE DETAILS
     # ==================================================
 
     if "selected_service" in st.session_state:
 
-        selected = st.session_state["selected_service"]
+        selected = st.session_state[
+            "selected_service"
+        ]
 
         data = services[selected]
 
@@ -299,11 +309,13 @@ Points Needed: {data['points']}
 
         st.write(data["description"])
 
-        st.write(f"Duration: {data['duration']}")
+        st.write(
+            f"Duration: {data['duration']}"
+        )
 
-        st.write(f"Price: ₹{data['price']}")
-
-        st.write(f"Points Needed: {data['points']}")
+        st.write(
+            f"Price: ₹{data['price']}"
+        )
 
         booking_date = st.date_input(
             "Select Date"
@@ -314,18 +326,17 @@ Points Needed: {data['points']}
             TIME_SLOTS
         )
 
-        slot_docs = db.collection("bookings") \
-            .where(
-                "booking_date",
-                "==",
-                str(booking_date)
-            ) \
-            .where(
-                "time_slot",
-                "==",
-                time_slot
-            ) \
-            .stream()
+        slot_docs = db.collection(
+            "bookings"
+        ).where(
+            "booking_date",
+            "==",
+            str(booking_date)
+        ).where(
+            "time_slot",
+            "==",
+            time_slot
+        ).stream()
 
         slot_count = len(list(slot_docs))
 
@@ -349,57 +360,43 @@ Points Needed: {data['points']}
             "Phone Number"
         )
 
-        use_points = st.checkbox(
-            "Use loyalty points"
-        )
-
-        final_price = data["price"]
-
-        if use_points:
-
-            discount = min(
-                customer_points,
-                data["points"]
-            )
-
-            final_price = max(
-                0,
-                data["price"] - discount
-            )
-
-            st.success(
-                f"Final Price: ₹{final_price}"
-            )
-
         if st.button("Confirm Booking"):
 
             if remaining <= 0:
 
-                st.error("Slot occupied")
+                st.error(
+                    "Cannot book occupied slot."
+                )
 
             elif customer_name and customer_phone:
 
                 try:
 
                     prompt = f"""
-                    Explain {selected} briefly.
-                    Give quick preparation advice.
-                    One short paragraph.
+                    Explain {selected}
+                    briefly and luxuriously.
                     """
 
                     response = requests.post(
+
                         AI_API_URL,
+
                         headers={
-                            "Authorization": f"Bearer {AI_API_KEY}",
-                            "Content-Type": "application/json"
+                            "Authorization":
+                            f"Bearer {AI_API_KEY}",
+
+                            "Content-Type":
+                            "application/json"
                         },
+
                         json={
-                            "messages": [
+                            "messages":[
                                 {
                                     "role":"user",
                                     "content":prompt
                                 }
                             ],
+
                             "generateImage": True
                         }
                     )
@@ -408,30 +405,52 @@ Points Needed: {data['points']}
 
                     ai_text = str(ai_response)
 
-                    db.collection("bookings").add({
+                    db.collection(
+                        "bookings"
+                    ).add({
 
-                        "customer_name": customer_name,
-                        "phone": customer_phone,
-                        "service": selected,
-                        "price": final_price,
-                        "points_used": use_points,
-                        "booking_date": str(booking_date),
-                        "time_slot": time_slot,
-                        "status": "Pending",
-                        "assigned_role": data["role"],
-                        "ai_response": ai_text,
-                        "created_at": str(datetime.now())
+                        "customer_name":
+                        customer_name,
+
+                        "phone":
+                        customer_phone,
+
+                        "service":
+                        selected,
+
+                        "price":
+                        data["price"],
+
+                        "booking_date":
+                        str(booking_date),
+
+                        "time_slot":
+                        time_slot,
+
+                        "status":
+                        "Pending",
+
+                        "assigned_role":
+                        data["role"],
+
+                        "ai_response":
+                        ai_text,
+
+                        "created_at":
+                        str(datetime.now())
                     })
 
                     st.success(
-                        "Booking confirmed successfully!"
+                        "Booking Confirmed!"
                     )
 
                     st.info(ai_text)
 
                 except Exception as e:
 
-                    st.error(f"Error: {e}")
+                    st.error(
+                        f"Error: {e}"
+                    )
 
 # ======================================================
 # MY BOOKINGS
@@ -451,7 +470,9 @@ elif mode == "My Bookings":
 
     if st.button("Load Bookings"):
 
-        docs = db.collection("bookings").stream()
+        docs = db.collection(
+            "bookings"
+        ).stream()
 
         found = False
 
@@ -474,15 +495,18 @@ elif mode == "My Bookings":
                 )
 
                 st.write(
-                    f"Date: {booking.get('booking_date')}"
+                    f"Date: "
+                    f"{booking.get('booking_date')}"
                 )
 
                 st.write(
-                    f"Time: {booking.get('time_slot')}"
+                    f"Time: "
+                    f"{booking.get('time_slot')}"
                 )
 
                 st.write(
-                    f"Status: {booking.get('status')}"
+                    f"Status: "
+                    f"{booking.get('status')}"
                 )
 
                 if st.button(
@@ -532,7 +556,9 @@ elif mode == "Worker Login":
             ]
         )
 
-        docs = db.collection("bookings").stream()
+        docs = db.collection(
+            "bookings"
+        ).stream()
 
         for doc in docs:
 
@@ -576,7 +602,7 @@ elif mode == "Worker Login":
                     db.collection(
                         "bookings"
                     ).document(doc.id).update({
-                        "status": "Accepted"
+                        "status":"Accepted"
                     })
 
                     st.rerun()
@@ -588,21 +614,70 @@ elif mode == "Worker Login":
                     key=f"complete_{doc.id}"
                 ):
 
-                    booking["status"] = "Completed"
+                    try:
 
-                    db.collection(
-                        "completed_bookings"
-                    ).document(doc.id).set(booking)
+                        customer_ref = db.collection(
+                            "loyalty_points"
+                        ).document(
+                            booking["phone"]
+                        )
 
-                    db.collection(
-                        "bookings"
-                    ).document(doc.id).delete()
+                        customer_doc = customer_ref.get()
 
-                    st.success(
-                        "Completed and removed"
-                    )
+                        current_points = 0
 
-                    st.rerun()
+                        if customer_doc.exists:
+
+                            current_points = (
+                                customer_doc
+                                .to_dict()
+                                .get("points",0)
+                            )
+
+                        customer_ref.set({
+
+                            "customer_name":
+                            booking["customer_name"],
+
+                            "phone":
+                            booking["phone"],
+
+                            "points":
+                            current_points + 5
+                        })
+
+                        booking["status"] = (
+                            "Completed"
+                        )
+
+                        booking["earned_points"] = 5
+
+                        db.collection(
+                            "completed_bookings"
+                        ).document(doc.id).set(
+                            booking
+                        )
+
+                        db.collection(
+                            "bookings"
+                        ).document(doc.id).delete()
+
+                        st.success(
+                            "Completed!"
+                        )
+
+                        st.success(
+                            "Customer earned "
+                            "5 loyalty points!"
+                        )
+
+                        st.rerun()
+
+                    except Exception as e:
+
+                        st.error(
+                            f"Error: {e}"
+                        )
 
     elif password != "":
 
@@ -612,23 +687,22 @@ elif mode == "Worker Login":
 # FOOTER
 # ======================================================
 
-st.markdown(
-    """
+st.markdown("""
 <hr>
 
 <div style='text-align:center;padding:20px;'>
+
 Powered by
+
 <span style='color:#d4af37;font-weight:bold;'>
 MentorLoop EDU
 </span>
+
 and
+
 <span style='color:#d4af37;font-weight:bold;'>
 PNB
 </span>
+
 </div>
-""",
-    unsafe_allow_html=True
-)
-
-
-
+""", unsafe_allow_html=True)
