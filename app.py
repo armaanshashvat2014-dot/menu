@@ -42,7 +42,7 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 # ======================================================
-# AI CONFIG
+# API CONFIG
 # ======================================================
 
 AI_API_URL = st.secrets["AI_API_URL"]
@@ -74,26 +74,50 @@ TIME_SLOTS = [
 ]
 
 # ======================================================
-# SERVICES
+# HUGE FULL MENU
 # ======================================================
 
 services = [
 
+    # MASSAGES
+
     {
-        "name":"Ayurvedic Massage",
-        "duration":"45 / 60 mins",
+        "name":"Ayurvedic Massage 45 mins",
+        "duration":"45 mins",
         "price":1500,
-        "description":"Relaxing Ayurvedic therapy using herbal oils.",
         "role":"Massage Expert",
+        "category":"Massage",
+        "description":"Traditional Ayurvedic herbal massage.",
         "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
     },
 
     {
-        "name":"Aroma Therapy",
-        "duration":"45 / 60 mins",
-        "price":2000,
-        "description":"Luxury aroma oil therapy for stress relief.",
+        "name":"Ayurvedic Massage 60 mins",
+        "duration":"60 mins",
+        "price":1800,
         "role":"Massage Expert",
+        "category":"Massage",
+        "description":"Extended Ayurvedic rejuvenation massage.",
+        "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
+    },
+
+    {
+        "name":"Aroma Therapy 45 mins",
+        "duration":"45 mins",
+        "price":2000,
+        "role":"Massage Expert",
+        "category":"Massage",
+        "description":"Luxury aroma therapy massage.",
+        "image":"https://images.unsplash.com/photo-1515377905703-c4788e51af15"
+    },
+
+    {
+        "name":"Aroma Therapy 60 mins",
+        "duration":"60 mins",
+        "price":2500,
+        "role":"Massage Expert",
+        "category":"Massage",
+        "description":"Extended aroma therapy session.",
         "image":"https://images.unsplash.com/photo-1515377905703-c4788e51af15"
     },
 
@@ -101,72 +125,228 @@ services = [
         "name":"Deep Tissue Massage",
         "duration":"60 mins",
         "price":3000,
-        "description":"Deep muscle pressure therapy.",
         "role":"Massage Expert",
+        "category":"Massage",
+        "description":"Deep muscle recovery massage.",
         "image":"https://images.unsplash.com/photo-1519823551278-64ac92734fb1"
     },
 
     {
-        "name":"Bridal Makeup",
-        "duration":"2 Hours",
-        "price":7500,
-        "description":"Luxury bridal makeover package.",
-        "role":"Makeup Artist",
+        "name":"Body Polish",
+        "duration":"60 mins",
+        "price":3500,
+        "role":"Massage Expert",
+        "category":"Spa",
+        "description":"Luxury skin polishing treatment.",
+        "image":"https://images.unsplash.com/photo-1515377905703-c4788e51af15"
+    },
+
+    {
+        "name":"Hand Massage",
+        "duration":"20 mins",
+        "price":250,
+        "role":"Massage Expert",
+        "category":"Massage",
+        "description":"Relaxing hand massage.",
+        "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
+    },
+
+    {
+        "name":"Foot Work Massage",
+        "duration":"30 mins",
+        "price":300,
+        "role":"Massage Expert",
+        "category":"Massage",
+        "description":"Luxury foot massage therapy.",
+        "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
+    },
+
+    {
+        "name":"Back Energy Massage",
+        "duration":"30 mins",
+        "price":400,
+        "role":"Massage Expert",
+        "category":"Massage",
+        "description":"Back muscle recovery therapy.",
+        "image":"https://images.unsplash.com/photo-1544161515-4ab6ce6db874"
+    },
+
+    # PIERCINGS
+
+    {
+        "name":"Wart Removal",
+        "duration":"20 mins",
+        "price":200,
+        "role":"Salon Staff",
+        "category":"Piercing",
+        "description":"Professional wart removal.",
+        "image":"https://images.unsplash.com/photo-1519824145371-296894a0daa9"
+    },
+
+    {
+        "name":"Nose Piercing",
+        "duration":"20 mins",
+        "price":600,
+        "role":"Salon Staff",
+        "category":"Piercing",
+        "description":"Safe nose piercing service.",
+        "image":"https://images.unsplash.com/photo-1521572267360-ee0c2909d518"
+    },
+
+    {
+        "name":"Ear Piercing Single",
+        "duration":"20 mins",
+        "price":800,
+        "role":"Salon Staff",
+        "category":"Piercing",
+        "description":"Single ear piercing.",
         "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
     },
 
     {
-        "name":"Party Makeup",
-        "duration":"1 Hour",
-        "price":3500,
-        "description":"Elegant glam makeup.",
+        "name":"Double Ear Piercing",
+        "duration":"25 mins",
+        "price":1200,
+        "role":"Salon Staff",
+        "category":"Piercing",
+        "description":"Double ear piercing styling.",
+        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
+    },
+
+    # MAKEUP
+
+    {
+        "name":"Mehandi",
+        "duration":"45 mins",
+        "price":500,
         "role":"Makeup Artist",
+        "category":"Makeup",
+        "description":"Traditional mehandi designs.",
+        "image":"https://images.unsplash.com/photo-1596704017254-9758d0f1a8db"
+    },
+
+    {
+        "name":"Light Makeup",
+        "duration":"45 mins",
+        "price":2500,
+        "role":"Makeup Artist",
+        "category":"Makeup",
+        "description":"Elegant light makeup.",
         "image":"https://images.unsplash.com/photo-1487412947147-5cebf100ffc2"
     },
 
     {
-        "name":"Keratin Treatment",
-        "duration":"2 Hours",
+        "name":"Party Makeup",
+        "duration":"60 mins",
+        "price":3500,
+        "role":"Makeup Artist",
+        "category":"Makeup",
+        "description":"Party glam makeup.",
+        "image":"https://images.unsplash.com/photo-1487412947147-5cebf100ffc2"
+    },
+
+    {
+        "name":"Bridal Trial Makeup",
+        "duration":"60 mins",
+        "price":2500,
+        "role":"Makeup Artist",
+        "category":"Makeup",
+        "description":"Trial bridal makeup.",
+        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
+    },
+
+    {
+        "name":"Bridal Makeup",
+        "duration":"120 mins",
+        "price":7500,
+        "role":"Makeup Artist",
+        "category":"Makeup",
+        "description":"Premium bridal package.",
+        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
+    },
+
+    {
+        "name":"Reception Makeup",
+        "duration":"90 mins",
         "price":5000,
-        "description":"Advanced keratin smoothing treatment.",
-        "role":"Hair Stylist",
-        "image":"https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f"
+        "role":"Makeup Artist",
+        "category":"Makeup",
+        "description":"Reception glam makeover.",
+        "image":"https://images.unsplash.com/photo-1524504388940-b1c1722653e1"
     },
 
-    {
-        "name":"Smoothening",
-        "duration":"2 Hours",
-        "price":4000,
-        "description":"Professional smoothening treatment.",
-        "role":"Hair Stylist",
-        "image":"https://images.unsplash.com/photo-1562322140-8baeececf3df"
-    },
+    # SAREE
 
     {
-        "name":"Bomb Pedicure",
-        "duration":"1 Hour",
-        "price":2000,
-        "description":"Luxury spa pedicure experience.",
-        "role":"Nail Technician",
-        "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
-    },
-
-    {
-        "name":"Basic Haircut",
+        "name":"Half Saree Draping",
         "duration":"30 mins",
-        "price":250,
-        "description":"Classic stylish haircut.",
-        "role":"Hair Stylist",
-        "image":"https://images.unsplash.com/photo-1517832606299-7ae9b720a186"
+        "price":300,
+        "role":"Salon Staff",
+        "category":"Saree",
+        "description":"Half saree styling.",
+        "image":"https://images.unsplash.com/photo-1610030469983-98e550d6193c"
     },
 
     {
         "name":"Saree Draping",
         "duration":"45 mins",
         "price":500,
-        "description":"Professional saree styling and draping.",
         "role":"Salon Staff",
+        "category":"Saree",
+        "description":"Luxury saree draping.",
         "image":"https://images.unsplash.com/photo-1610030469983-98e550d6193c"
+    },
+
+    {
+        "name":"Saree Preplating",
+        "duration":"45 mins",
+        "price":700,
+        "role":"Salon Staff",
+        "category":"Saree",
+        "description":"Professional saree preplating.",
+        "image":"https://images.unsplash.com/photo-1610030469983-98e550d6193c"
+    },
+
+    # PEDICURE
+
+    {
+        "name":"Basic Pedicure",
+        "duration":"45 mins",
+        "price":500,
+        "role":"Nail Technician",
+        "category":"Pedicure",
+        "description":"Basic foot care.",
+        "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
+    },
+
+    {
+        "name":"Spa Pedicure",
+        "duration":"60 mins",
+        "price":600,
+        "role":"Nail Technician",
+        "category":"Pedicure",
+        "description":"Relaxing spa pedicure.",
+        "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
+    },
+
+    {
+        "name":"Crystal Pedicure",
+        "duration":"60 mins",
+        "price":900,
+        "role":"Nail Technician",
+        "category":"Pedicure",
+        "description":"Crystal spa pedicure.",
+        "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
+    },
+
+    {
+        "name":"Bomb Pedicure",
+        "duration":"90 mins",
+        "price":2000,
+        "role":"Nail Technician",
+        "category":"Pedicure",
+        "description":"Premium bomb pedicure.",
+        "image":"https://images.unsplash.com/photo-1519014816548-bf5fe059798b"
     }
 
 ]
@@ -189,21 +369,15 @@ st.markdown("""
     border-radius:20px;
     margin-bottom:20px;
     border:1px solid rgba(255,255,255,0.08);
-    transition:0.3s;
 }
 
 .service-card:hover{
     transform:translateY(-5px);
 }
 
-.service-image{
-    width:100%;
-    border-radius:15px;
-}
-
 .price{
     color:#d4af37;
-    font-size:26px;
+    font-size:24px;
     font-weight:bold;
 }
 
@@ -215,6 +389,7 @@ st.markdown("""
 # ======================================================
 
 st.markdown("""
+
 <div style='text-align:center;padding:20px;'>
 
 <h1 style='font-size:60px;color:#d4af37;'>
@@ -226,6 +401,7 @@ Beauty • Wellness • Luxury
 </p>
 
 </div>
+
 """, unsafe_allow_html=True)
 
 # ======================================================
@@ -249,86 +425,75 @@ if mode == "Customer":
 
     st.title("Luxury Services")
 
-    # ==================================================
-    # LOYALTY
-    # ==================================================
-
-    st.subheader("🎁 Loyalty Points")
-
-    check_phone = st.text_input(
-        "Enter Phone Number"
+    search = st.text_input(
+        "Search Services"
     )
 
-    if st.button("Load Points"):
-
-        if check_phone.strip() == "":
-
-            st.error(
-                "Please enter phone number."
+    categories = sorted(
+        list(
+            set(
+                [
+                    s["category"]
+                    for s in services
+                ]
             )
+        )
+    )
 
-        else:
-
-            points_doc = db.collection(
-                "loyalty_points"
-            ).document(
-                check_phone
-            ).get()
-
-            if points_doc.exists:
-
-                points = points_doc.to_dict().get(
-                    "points",
-                    0
-                )
-
-                st.success(
-                    f"You have {points} points!"
-                )
-
-            else:
-
-                st.warning(
-                    "No points yet."
-                )
-
-    # ==================================================
-    # CARDS
-    # ==================================================
+    selected_category = st.selectbox(
+        "Filter Category",
+        ["All"] + categories
+    )
 
     cols = st.columns(3)
 
-    for i, service in enumerate(services):
+    filtered = []
+
+    for s in services:
+
+        if (
+            selected_category != "All"
+            and
+            s["category"] != selected_category
+        ):
+            continue
+
+        if (
+            search.lower()
+            not in s["name"].lower()
+        ):
+            continue
+
+        filtered.append(s)
+
+    for i, service in enumerate(filtered):
 
         with cols[i % 3]:
 
-            st.markdown(f"""
-            <div class='service-card'>
+            st.image(
+                service["image"]
+            )
 
-            <img src='{service["image"]}'
-            class='service-image'>
+            st.markdown(
+                f"### {service['name']}"
+            )
 
-            <h2 style='color:#d4af37;'>
-            {service["name"]}
-            </h2>
+            st.write(
+                service["description"]
+            )
 
-            <p>{service["description"]}</p>
+            st.write(
+                f"⏱ {service['duration']}"
+            )
 
-            <p>
-            <b>Duration:</b>
-            {service["duration"]}
-            </p>
-
-            <div class='price'>
-            ₹{service["price"]}
-            </div>
-
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='price'>₹{service['price']}</div>",
+                unsafe_allow_html=True
+            )
 
             if st.button(
-                f"✨ Open {service['name']}",
-                key=f"open_{service['name']}"
+                f"Open {service['name']}",
+                key=f"open_{i}"
             ):
 
                 st.session_state[
@@ -347,9 +512,11 @@ if mode == "Customer":
 
         @st.dialog(selected["name"])
 
-        def service_popup():
+        def popup():
 
-            st.image(selected["image"])
+            st.image(
+                selected["image"]
+            )
 
             st.write(
                 selected["description"]
@@ -366,43 +533,13 @@ if mode == "Customer":
             )
 
             booking_date = st.date_input(
-                "Select Date"
+                "Booking Date"
             )
 
             time_slot = st.selectbox(
-                "Select Time Slot",
+                "Time Slot",
                 TIME_SLOTS
             )
-
-            slot_docs = db.collection(
-                "bookings"
-            ).where(
-                "booking_date",
-                "==",
-                str(booking_date)
-            ).where(
-                "time_slot",
-                "==",
-                time_slot
-            ).stream()
-
-            slot_count = len(
-                list(slot_docs)
-            )
-
-            remaining = 4 - slot_count
-
-            if remaining <= 0:
-
-                st.error(
-                    "Slot occupied"
-                )
-
-            else:
-
-                st.success(
-                    f"{remaining} slots remaining"
-                )
 
             customer_name = st.text_input(
                 "Customer Name"
@@ -412,34 +549,47 @@ if mode == "Customer":
                 "Phone Number"
             )
 
-            if st.button("Confirm Booking"):
+            if st.button(
+                "Confirm Booking"
+            ):
 
-                if remaining <= 0:
+                slot_docs = db.collection(
+                    "bookings"
+                ).where(
+                    "booking_date",
+                    "==",
+                    str(booking_date)
+                ).where(
+                    "time_slot",
+                    "==",
+                    time_slot
+                ).stream()
+
+                slot_count = len(
+                    list(slot_docs)
+                )
+
+                if slot_count >= 4:
 
                     st.error(
-                        "Cannot book occupied slot."
+                        "Slot occupied"
                     )
 
-                elif (
-                    customer_name
-                    and
-                    customer_phone
-                ):
+                else:
+
+                    prompt = f"""
+                    Explain
+                    {selected['name']}
+                    briefly.
+                    """
 
                     try:
-
-                        prompt = f"""
-                        Explain
-                        {selected['name']}
-                        luxuriously.
-                        """
 
                         response = requests.post(
 
                             AI_API_URL,
 
                             headers={
-
                                 "Authorization":
                                 f"Bearer {AI_API_KEY}",
 
@@ -448,20 +598,14 @@ if mode == "Customer":
                             },
 
                             json={
-
                                 "messages":[
                                     {
                                         "role":"user",
                                         "content":prompt
                                     }
                                 ],
-
                                 "generateImage": True
                             }
-                        )
-
-                        ai_response = (
-                            response.json()
                         )
 
                         db.collection(
@@ -476,9 +620,6 @@ if mode == "Customer":
 
                             "service":
                             selected["name"],
-
-                            "price":
-                            selected["price"],
 
                             "booking_date":
                             str(booking_date),
@@ -497,20 +638,20 @@ if mode == "Customer":
                         })
 
                         st.success(
-                            "Booking Confirmed!"
+                            "Booking confirmed!"
                         )
 
                         st.write(
-                            ai_response
+                            response.json()
                         )
 
                     except Exception as e:
 
                         st.error(
-                            f"Error: {e}"
+                            str(e)
                         )
 
-        service_popup()
+        popup()
 
 # ======================================================
 # MY BOOKINGS
@@ -520,15 +661,13 @@ elif mode == "My Bookings":
 
     st.title("📅 My Bookings")
 
-    customer_name = st.text_input(
-        "Customer Name"
-    )
-
-    customer_phone = st.text_input(
+    phone = st.text_input(
         "Phone Number"
     )
 
-    if st.button("Load Bookings"):
+    if st.button(
+        "Load Bookings"
+    ):
 
         docs = db.collection(
             "bookings"
@@ -540,13 +679,7 @@ elif mode == "My Bookings":
 
             booking = doc.to_dict()
 
-            if (
-                booking.get("customer_name")
-                == customer_name
-                and
-                booking.get("phone")
-                == customer_phone
-            ):
+            if booking.get("phone") == phone:
 
                 found = True
 
@@ -595,16 +728,18 @@ elif mode == "My Bookings":
 
 elif mode == "Worker Login":
 
-    st.title("🔒 Worker Dashboard")
+    st.title(
+        "🔒 Worker Dashboard"
+    )
 
     password = st.text_input(
-        "Enter Worker Password",
+        "Password",
         type="password"
     )
 
     if password == WORKER_PASSWORD:
 
-        worker_role = st.selectbox(
+        role = st.selectbox(
             "Select Role",
             [
                 "Massage Expert",
@@ -624,8 +759,10 @@ elif mode == "Worker Login":
             booking = doc.to_dict()
 
             if (
-                booking.get("assigned_role")
-                != worker_role
+                booking.get(
+                    "assigned_role"
+                )
+                != role
             ):
                 continue
 
@@ -634,19 +771,27 @@ elif mode == "Worker Login":
             )
 
             st.write(
-                booking.get("customer_name")
+                booking.get(
+                    "customer_name"
+                )
             )
 
             st.write(
-                booking.get("booking_date")
+                booking.get(
+                    "booking_date"
+                )
             )
 
             st.write(
-                booking.get("time_slot")
+                booking.get(
+                    "time_slot"
+                )
             )
 
             st.write(
-                booking.get("status")
+                booking.get(
+                    "status"
+                )
             )
 
             col1, col2 = st.columns(2)
@@ -655,7 +800,7 @@ elif mode == "Worker Login":
 
                 if st.button(
                     f"Accept {doc.id}",
-                    key=f"accept_{doc.id}"
+                    key=f"a_{doc.id}"
                 ):
 
                     db.collection(
@@ -672,96 +817,79 @@ elif mode == "Worker Login":
 
                 if st.button(
                     f"Complete {doc.id}",
-                    key=f"complete_{doc.id}"
+                    key=f"c_{doc.id}"
                 ):
 
-                    try:
+                    booking["status"] = (
+                        "Completed"
+                    )
 
-                        customer_ref = db.collection(
-                            "loyalty_points"
-                        ).document(
-                            booking["phone"]
-                        )
+                    db.collection(
+                        "completed_bookings"
+                    ).document(
+                        doc.id
+                    ).set(booking)
 
-                        customer_doc = (
-                            customer_ref.get()
-                        )
+                    db.collection(
+                        "bookings"
+                    ).document(
+                        doc.id
+                    ).delete()
 
-                        current_points = 0
+                    customer_ref = db.collection(
+                        "loyalty_points"
+                    ).document(
+                        booking["phone"]
+                    )
 
-                        if customer_doc.exists:
+                    customer_doc = (
+                        customer_ref.get()
+                    )
 
-                            current_points = (
-                                customer_doc
-                                .to_dict()
-                                .get(
-                                    "points",
-                                    0
-                                )
+                    current_points = 0
+
+                    if customer_doc.exists:
+
+                        current_points = (
+                            customer_doc
+                            .to_dict()
+                            .get(
+                                "points",
+                                0
                             )
-
-                        customer_ref.set({
-
-                            "customer_name":
-                            booking[
-                                "customer_name"
-                            ],
-
-                            "phone":
-                            booking["phone"],
-
-                            "points":
-                            current_points + 5
-                        })
-
-                        booking["status"] = (
-                            "Completed"
                         )
 
+                    customer_ref.set({
+
+                        "customer_name":
                         booking[
-                            "earned_points"
-                        ] = 5
+                            "customer_name"
+                        ],
 
-                        db.collection(
-                            "completed_bookings"
-                        ).document(
-                            doc.id
-                        ).set(booking)
+                        "phone":
+                        booking["phone"],
 
-                        db.collection(
-                            "bookings"
-                        ).document(
-                            doc.id
-                        ).delete()
+                        "points":
+                        current_points + 5
+                    })
 
-                        st.success(
-                            "Completed!"
-                        )
+                    st.success(
+                        "Completed!"
+                    )
 
-                        st.success(
-                            "Customer earned "
-                            "5 points!"
-                        )
+                    st.success(
+                        "Customer earned "
+                        "5 points!"
+                    )
 
-                        st.rerun()
-
-                    except Exception as e:
-
-                        st.error(
-                            f"Error: {e}"
-                        )
-
-    elif password != "":
-
-        st.error(
-            "Wrong password"
-        )
+                    st.rerun()
 
 # ======================================================
 # FOOTER
 # ======================================================
 
 st.markdown("""
+
 <hr>
 
 <div style='text-align:center;padding:20px;'>
@@ -779,4 +907,5 @@ PNB
 </span>
 
 </div>
+
 """, unsafe_allow_html=True)
