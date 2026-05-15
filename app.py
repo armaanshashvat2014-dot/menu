@@ -1390,24 +1390,30 @@ elif mode == "📅 My Bookings":
     lookup_phone = st.session_state.get("bookings_phone", "")
 
     if lookup_phone:
-        # Show loyalty points
-        loyalty_ref = db.collection("loyalty_points").document(lookup_phone).get()
-        if loyalty_ref.exists:
-            pts = loyalty_ref.to_dict().get("points", 0)
-            cname = loyalty_ref.to_dict().get("customer_name", "")
-            st.markdown(f"""
-            <div style='background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));
-                border:1px solid rgba(201,168,76,0.35);border-radius:16px;padding:20px 28px;
-                margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;'>
-                <div style='font-size:48px'>💎</div>
-                <div>
-                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px'>{cname}</div>
-                    <div style='color:#888;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-top:4px'>Loyalty Points</div>
-                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:38px;font-weight:600'>{pts} pts</div>
-                    <div style='color:#666;font-size:12px;margin-top:4px'>🐾 Spend your points in the Pet Shop!</div>
-                </div>
+        # Show loyalty points — always, even if 0
+        loyalty_doc = db.collection("loyalty_points").document(lookup_phone).get()
+        if loyalty_doc.exists:
+            pts = loyalty_doc.to_dict().get("points", 0)
+            cname = loyalty_doc.to_dict().get("customer_name", "Guest")
+        else:
+            pts = 0
+            # Try to get name from a booking
+            sample_docs = [d.to_dict() for d in db.collection("bookings").stream() if d.to_dict().get("phone") == lookup_phone]
+            cname = sample_docs[0].get("customer_name", "Guest") if sample_docs else "Guest"
+
+        st.markdown(f"""
+        <div style='background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));
+            border:1px solid rgba(201,168,76,0.35);border-radius:16px;padding:20px 28px;
+            margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;'>
+            <div style='font-size:48px'>💎</div>
+            <div>
+                <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px'>{cname}</div>
+                <div style='color:#888;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-top:4px'>Loyalty Points</div>
+                <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:38px;font-weight:600'>{pts} pts</div>
+                <div style='color:#666;font-size:12px;margin-top:4px'>🐾 Spend your points in the Pet Shop!</div>
             </div>
-            """, unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
 
         docs = list(db.collection("bookings").stream())
         my_bookings = [(doc.id, doc.to_dict()) for doc in docs if doc.to_dict().get("phone") == lookup_phone]
@@ -1445,6 +1451,132 @@ elif mode == "📅 My Bookings":
                     db.collection("completed_bookings").document(doc_id).delete()
                     st.success(f"✅ '{booking.get('service')}' booking cancelled successfully.")
                     st.rerun()
+
+# ======================================================
+# PET SHOP
+# ======================================================
+
+elif mode == "🐾 Pet Shop":
+    st.markdown("<h1 class='section-heading'>🐾 Digital Pet Shop</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    <p style='color:#888;margin-bottom:8px;line-height:1.7'>
+    Earn <span style='color:#c9a84c;font-weight:600'>5 loyalty points</span> every time you complete a salon service.
+    Spend them here to adopt a digital pet that lives on your profile! 🌟
+    </p>
+    """, unsafe_allow_html=True)
+
+    shop_phone = st.text_input("📱 Enter your phone number to check your points", key="shop_phone")
+
+    if st.button("Check My Points & Shop"):
+        if not shop_phone.strip():
+            st.warning("Please enter your phone number.")
+        else:
+            st.session_state["shop_phone_verified"] = shop_phone.strip()
+
+    shop_phone_verified = st.session_state.get("shop_phone_verified", "")
+
+    if shop_phone_verified:
+        loyalty_ref = db.collection("loyalty_points").document(shop_phone_verified)
+        loyalty_doc = loyalty_ref.get()
+
+        if loyalty_doc.exists:
+            loyalty_data = loyalty_doc.to_dict()
+            current_points = loyalty_data.get("points", 0)
+            customer_name = loyalty_data.get("customer_name", "Guest")
+        else:
+            current_points = 0
+            customer_name = "Guest"
+
+        st.markdown(f"""
+        <div style='background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.04));
+            border:1px solid rgba(201,168,76,0.4);border-radius:20px;padding:24px 32px;
+            margin:20px 0 32px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;'>
+            <div style='font-size:56px'>💎</div>
+            <div>
+                <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:28px;margin-bottom:2px'>{customer_name}</div>
+                <div style='color:#666;font-size:12px;letter-spacing:2px;text-transform:uppercase'>Your Balance</div>
+                <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:52px;font-weight:600;line-height:1'>{current_points}</div>
+                <div style='color:#888;font-size:13px'>loyalty points</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Show owned pets
+        owned_doc = db.collection("owned_pets").document(shop_phone_verified).get()
+        owned_pets = owned_doc.to_dict().get("pets", []) if owned_doc.exists else []
+
+        if owned_pets:
+            st.markdown("<h3 style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px;margin-bottom:16px'>🏡 Your Pets</h3>", unsafe_allow_html=True)
+            pet_cols = st.columns(min(len(owned_pets), 4))
+            for pi, pname in enumerate(owned_pets):
+                # find pet data
+                pet_data = next((p for p in DIGITAL_PETS if p["name"] == pname), None)
+                if pet_data:
+                    with pet_cols[pi % 4]:
+                        rarity_color = RARITY_COLORS.get(pet_data["rarity"], "#888")
+                        st.markdown(f"""
+                        <div style='background:linear-gradient(145deg,#161410,#1e1a12);
+                            border:1px solid {rarity_color}44;border-radius:16px;padding:20px;
+                            text-align:center;margin-bottom:12px;'>
+                            <div style='font-size:52px;margin-bottom:8px'>{pet_data["emoji"]}</div>
+                            <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:18px'>{pet_data["name"]}</div>
+                            <div style='color:{rarity_color};font-size:11px;letter-spacing:1px;
+                                text-transform:uppercase;margin-top:4px'>✦ {pet_data["rarity"]} ✦</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+        st.markdown("<h3 style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px;margin:24px 0 16px'>🛒 Available Pets</h3>", unsafe_allow_html=True)
+
+        pet_cols = st.columns(3)
+        for pi, pet in enumerate(DIGITAL_PETS):
+            rarity_color = RARITY_COLORS.get(pet["rarity"], "#888")
+            already_owned = pet["name"] in owned_pets
+            can_afford = current_points >= pet["cost"]
+
+            with pet_cols[pi % 3]:
+                st.markdown(f"""
+                <div style='background:linear-gradient(145deg,#161410,#1e1a12);
+                    border:1px solid {rarity_color}55;border-radius:20px;padding:24px;
+                    text-align:center;margin-bottom:8px;
+                    {"opacity:0.5;" if already_owned else ""}'>
+                    <div style='font-size:60px;margin-bottom:10px'>{pet["emoji"]}</div>
+                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:22px;margin-bottom:4px'>
+                        {pet["name"]}
+                    </div>
+                    <div style='color:{rarity_color};font-size:11px;letter-spacing:2px;
+                        text-transform:uppercase;margin-bottom:10px'>✦ {pet["rarity"]} ✦</div>
+                    <div style='color:#888;font-size:13px;line-height:1.5;margin-bottom:14px'>
+                        {pet["description"]}
+                    </div>
+                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:28px;font-weight:600'>
+                        {pet["cost"]} pts
+                    </div>
+                    {"<div style='color:#3ab26e;font-size:12px;margin-top:8px;letter-spacing:1px'>✅ OWNED</div>" if already_owned else ""}
+                    {"<div style='color:#555;font-size:12px;margin-top:8px'>Not enough points</div>" if not can_afford and not already_owned else ""}
+                </div>
+                """, unsafe_allow_html=True)
+
+                if not already_owned:
+                    if st.button(
+                        f"🐾 Adopt {pet['name']}",
+                        key=f"adopt_{pi}",
+                        disabled=not can_afford
+                    ):
+                        # Deduct points
+                        new_points = current_points - pet["cost"]
+                        loyalty_ref.set({
+                            "customer_name": customer_name,
+                            "phone": shop_phone_verified,
+                            "points": new_points
+                        })
+                        # Save owned pet
+                        new_owned = owned_pets + [pet["name"]]
+                        db.collection("owned_pets").document(shop_phone_verified).set({
+                            "phone": shop_phone_verified,
+                            "pets": new_owned
+                        })
+                        st.success(f"🎉 You adopted {pet['emoji']} {pet['name']}! Enjoy your new companion!")
+                        st.rerun()
 
 # ======================================================
 # WORKER LOGIN
