@@ -50,6 +50,105 @@ AI_API_KEY = st.secrets["AI_API_KEY"]
 WORKER_PASSWORD = "PNB2024"
 
 # ======================================================
+# WORKER NUMBERED IDs
+# Each role has up to 3 numbered workers
+# ======================================================
+
+WORKER_ROLES = [
+    "Massage Expert",
+    "Makeup Artist",
+    "Hair Stylist",
+    "Nail Technician",
+    "Skin Specialist",
+    "Mehandi Artist",
+    "Styling Expert"
+]
+
+WORKER_OPTIONS = []
+for role in WORKER_ROLES:
+    for n in range(1, 4):
+        WORKER_OPTIONS.append(f"{role} #{n}")
+
+# ======================================================
+# DIGITAL PETS SHOP
+# ======================================================
+
+DIGITAL_PETS = [
+    {
+        "name": "Golden Kitty",
+        "emoji": "🐱",
+        "cost": 10,
+        "rarity": "Common",
+        "description": "A cheerful golden kitten who loves head scratches and warm laps."
+    },
+    {
+        "name": "Pearl Bunny",
+        "emoji": "🐰",
+        "cost": 15,
+        "rarity": "Common",
+        "description": "A soft pearl-white bunny with dreamy eyes. Hops around your profile."
+    },
+    {
+        "name": "Sapphire Pup",
+        "emoji": "🐶",
+        "cost": 20,
+        "rarity": "Uncommon",
+        "description": "A loyal sapphire-eyed puppy that never leaves your side."
+    },
+    {
+        "name": "Rose Parrot",
+        "emoji": "🦜",
+        "cost": 25,
+        "rarity": "Uncommon",
+        "description": "A vibrant rose-feathered parrot that whispers beauty tips."
+    },
+    {
+        "name": "Velvet Fox",
+        "emoji": "🦊",
+        "cost": 35,
+        "rarity": "Rare",
+        "description": "A mysterious velvet fox with a tail that shimmers like gold."
+    },
+    {
+        "name": "Crystal Deer",
+        "emoji": "🦌",
+        "cost": 45,
+        "rarity": "Rare",
+        "description": "An ethereal crystal deer that glows under moonlight."
+    },
+    {
+        "name": "Midnight Owl",
+        "emoji": "🦉",
+        "cost": 55,
+        "rarity": "Epic",
+        "description": "A wise midnight owl with ancient knowledge of beauty secrets."
+    },
+    {
+        "name": "Aurora Dragon",
+        "emoji": "🐉",
+        "cost": 80,
+        "rarity": "Legendary",
+        "description": "The rarest of all — an aurora dragon who breathes golden light."
+    },
+    {
+        "name": "Diamond Unicorn",
+        "emoji": "🦄",
+        "cost": 100,
+        "rarity": "Mythic",
+        "description": "A mythic diamond unicorn. The crown jewel of the PNB pet collection."
+    },
+]
+
+RARITY_COLORS = {
+    "Common": "#888",
+    "Uncommon": "#3ab26e",
+    "Rare": "#4a9eff",
+    "Epic": "#a855f7",
+    "Legendary": "#f97316",
+    "Mythic": "#c9a84c"
+}
+
+# ======================================================
 # SESSION STATE
 # ======================================================
 
@@ -59,6 +158,8 @@ if "open_ai" not in st.session_state:
     st.session_state["open_ai"] = False
 if "active_category" not in st.session_state:
     st.session_state["active_category"] = "All"
+if "bookings_phone" not in st.session_state:
+    st.session_state["bookings_phone"] = ""
 
 # ======================================================
 # TIME SLOTS
@@ -1052,7 +1153,7 @@ st.markdown("""
 
 mode = st.sidebar.radio(
     "Navigation",
-    ["💎 Services", "📅 My Bookings", "🔒 Worker Login"]
+    ["💎 Services", "📅 My Bookings", "🐾 Pet Shop", "🔒 Worker Login"]
 )
 
 # ======================================================
@@ -1164,10 +1265,12 @@ if mode == "💎 Services":
                 else:
                     slot_docs = db.collection("bookings").where(
                         "booking_date", "==", str(booking_date)
-                    ).where("time_slot", "==", time_slot).stream()
+                    ).where("time_slot", "==", time_slot).where(
+                        "service", "==", selected["name"]
+                    ).stream()
 
                     if len(list(slot_docs)) >= 4:
-                        st.error("⚠️ This time slot is fully booked. Please choose another.")
+                        st.error("⚠️ This service is fully booked for that slot (max 4). Please choose another time.")
                     else:
                         try:
                             response = requests.post(
@@ -1273,7 +1376,7 @@ if mode == "💎 Services":
 
 elif mode == "📅 My Bookings":
     st.markdown("<h1 class='section-heading'>📅 My Bookings</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#666;margin-bottom:24px'>Enter your phone number to view and manage your bookings.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#666;margin-bottom:24px'>Enter your phone number to view and cancel your bookings.</p>", unsafe_allow_html=True)
 
     phone = st.text_input("📱 Phone Number")
 
@@ -1281,41 +1384,67 @@ elif mode == "📅 My Bookings":
         if not phone.strip():
             st.warning("Please enter your phone number.")
         else:
-            docs = db.collection("bookings").stream()
-            found = False
+            st.session_state["bookings_phone"] = phone.strip()
 
-            for doc in docs:
-                booking = doc.to_dict()
-                if booking.get("phone") == phone.strip():
-                    found = True
-                    status = booking.get("status", "Pending")
-                    status_class = f"status-{status.lower()}"
-                    st.markdown(f"""
-                    <div class='booking-card'>
-                        <div style='font-family:Cormorant Garamond;font-size:24px;color:#c9a84c;margin-bottom:8px'>
-                            {booking.get('service')}
-                        </div>
-                        <div style='display:flex;gap:24px;flex-wrap:wrap;color:#888;font-size:13px;margin-bottom:12px'>
-                            <span>📅 {booking.get('booking_date')}</span>
-                            <span>🕐 {booking.get('time_slot')}</span>
-                            <span>💰 ₹{booking.get('price', '—')}</span>
-                        </div>
-                        <span class='{status_class}'>{status}</span>
+    # Keep bookings visible after cancel rerun
+    lookup_phone = st.session_state.get("bookings_phone", "")
+
+    if lookup_phone:
+        # Show loyalty points
+        loyalty_ref = db.collection("loyalty_points").document(lookup_phone).get()
+        if loyalty_ref.exists:
+            pts = loyalty_ref.to_dict().get("points", 0)
+            cname = loyalty_ref.to_dict().get("customer_name", "")
+            st.markdown(f"""
+            <div style='background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04));
+                border:1px solid rgba(201,168,76,0.35);border-radius:16px;padding:20px 28px;
+                margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;'>
+                <div style='font-size:48px'>💎</div>
+                <div>
+                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px'>{cname}</div>
+                    <div style='color:#888;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-top:4px'>Loyalty Points</div>
+                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:38px;font-weight:600'>{pts} pts</div>
+                    <div style='color:#666;font-size:12px;margin-top:4px'>🐾 Spend your points in the Pet Shop!</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        docs = list(db.collection("bookings").stream())
+        my_bookings = [(doc.id, doc.to_dict()) for doc in docs if doc.to_dict().get("phone") == lookup_phone]
+
+        if not my_bookings:
+            st.markdown("""
+            <div style='text-align:center;padding:40px;color:#555'>
+                <div style='font-size:48px;margin-bottom:16px'>🔍</div>
+                <p>No active bookings found for this phone number.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            for doc_id, booking in my_bookings:
+                status = booking.get("status", "Pending")
+                status_class = f"status-{status.lower()}"
+                st.markdown(f"""
+                <div class='booking-card'>
+                    <div style='font-family:Cormorant Garamond;font-size:24px;color:#c9a84c;margin-bottom:8px'>
+                        {booking.get('service')}
                     </div>
-                    """, unsafe_allow_html=True)
-
-                    if st.button(f"❌ Cancel Booking", key=f"cancel_{doc.id}"):
-                        db.collection("bookings").document(doc.id).delete()
-                        st.success("Booking cancelled.")
-                        st.rerun()
-
-            if not found:
-                st.markdown("""
-                <div style='text-align:center;padding:40px;color:#555'>
-                    <div style='font-size:48px;margin-bottom:16px'>🔍</div>
-                    <p>No bookings found for this phone number.</p>
+                    <div style='display:flex;gap:24px;flex-wrap:wrap;color:#888;font-size:13px;margin-bottom:12px'>
+                        <span>📅 {booking.get('booking_date')}</span>
+                        <span>🕐 {booking.get('time_slot')}</span>
+                        <span>💰 ₹{booking.get('price', '—')}</span>
+                        <span>👤 {booking.get('assigned_role','')}</span>
+                    </div>
+                    <span class='{status_class}'>● {status}</span>
                 </div>
                 """, unsafe_allow_html=True)
+
+                if st.button(f"❌ Cancel this booking", key=f"cancel_{doc_id}"):
+                    # Delete from bookings (removes from worker view too)
+                    db.collection("bookings").document(doc_id).delete()
+                    # Also clean up completed_bookings if it somehow ended up there
+                    db.collection("completed_bookings").document(doc_id).delete()
+                    st.success(f"✅ '{booking.get('service')}' booking cancelled successfully.")
+                    st.rerun()
 
 # ======================================================
 # WORKER LOGIN
@@ -1410,7 +1539,7 @@ st.markdown("""
     <div class='gold-divider'></div>
     <p>
         Crafted with elegance by
-        <span>PNB Smart &amp; Luxurious Salon and MentorLoop EDU</span>
+        <span>PNB Smart &amp; Luxurious Salon</span>
         &nbsp;·&nbsp; AI-Powered Beauty Experience
     </p>
 </div>
