@@ -1457,23 +1457,30 @@ elif mode == "📅 My Bookings":
 # ======================================================
 
 elif mode == "🐾 Pet Shop":
+    import streamlit.components.v1 as components
+    import json
+    import time as time_module
+
     st.markdown("<h1 class='section-heading'>🐾 Digital Pet Shop</h1>", unsafe_allow_html=True)
     st.markdown("""
     <p style='color:#888;margin-bottom:8px;line-height:1.7'>
     Earn <span style='color:#c9a84c;font-weight:600'>5 loyalty points</span> every time you complete a salon service.
-    Spend them here to adopt a digital pet that lives on your profile! 🌟
+    Spend them here to adopt a digital pet — then <b style='color:#c9a84c'>play with it in 3D!</b> 🌟
     </p>
     """, unsafe_allow_html=True)
 
-    shop_phone = st.text_input("📱 Enter your phone number to check your points", key="shop_phone")
+    shop_phone = st.text_input("📱 Enter your phone number", key="shop_phone")
 
     if st.button("Check My Points & Shop"):
         if not shop_phone.strip():
             st.warning("Please enter your phone number.")
         else:
             st.session_state["shop_phone_verified"] = shop_phone.strip()
+            st.session_state["playing_pet"] = None
 
     shop_phone_verified = st.session_state.get("shop_phone_verified", "")
+    if "playing_pet" not in st.session_state:
+        st.session_state["playing_pet"] = None
 
     if shop_phone_verified:
         loyalty_ref = db.collection("loyalty_points").document(shop_phone_verified)
@@ -1501,82 +1508,651 @@ elif mode == "🐾 Pet Shop":
         </div>
         """, unsafe_allow_html=True)
 
-        # Show owned pets
+        # Load owned pets + their needs state
         owned_doc = db.collection("owned_pets").document(shop_phone_verified).get()
-        owned_pets = owned_doc.to_dict().get("pets", []) if owned_doc.exists else []
+        owned_pets_data = owned_doc.to_dict() if owned_doc.exists else {}
+        owned_pets = owned_pets_data.get("pets", [])
+        pet_needs_all = owned_pets_data.get("needs", {})
 
-        if owned_pets:
-            st.markdown("<h3 style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px;margin-bottom:16px'>🏡 Your Pets</h3>", unsafe_allow_html=True)
-            pet_cols = st.columns(min(len(owned_pets), 4))
-            for pi, pname in enumerate(owned_pets):
-                # find pet data
-                pet_data = next((p for p in DIGITAL_PETS if p["name"] == pname), None)
-                if pet_data:
-                    with pet_cols[pi % 4]:
-                        rarity_color = RARITY_COLORS.get(pet_data["rarity"], "#888")
+        # Decay needs based on time since last save
+        now_ts = time_module.time()
+        last_saved_ts = owned_pets_data.get("last_saved", now_ts)
+        hours_elapsed = min((now_ts - last_saved_ts) / 3600.0, 12)  # cap at 12h decay
+        DECAY_PER_HOUR = 4  # each need drops 4 pts/hour
+
+        for pname in owned_pets:
+            if pname not in pet_needs_all:
+                pet_needs_all[pname] = {"hunger": 80, "happiness": 80, "energy": 80, "cleanliness": 80}
+            needs = pet_needs_all[pname]
+            for k in ["hunger", "happiness", "energy", "cleanliness"]:
+                needs[k] = max(0, needs[k] - DECAY_PER_HOUR * hours_elapsed)
+            pet_needs_all[pname] = needs
+
+        # ── PLAY MODE ──────────────────────────────────────────────
+        playing = st.session_state["playing_pet"]
+
+        if playing and playing in owned_pets:
+            pet_info = next((p for p in DIGITAL_PETS if p["name"] == playing), None)
+            needs = pet_needs_all.get(playing, {"hunger": 80, "happiness": 80, "energy": 80, "cleanliness": 80})
+
+            rarity_color = RARITY_COLORS.get(pet_info["rarity"], "#888") if pet_info else "#c9a84c"
+
+            st.markdown(f"""
+            <div style='display:flex;align-items:center;gap:16px;margin-bottom:24px'>
+                <div style='font-size:42px'>{pet_info["emoji"] if pet_info else "🐾"}</div>
+                <div>
+                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:30px'>{playing}</div>
+                    <div style='color:{rarity_color};font-size:11px;letter-spacing:2px;text-transform:uppercase'>
+                        ✦ {pet_info["rarity"] if pet_info else ""} ✦
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Build needs color
+            def needs_color(v):
+                if v >= 60: return "#3ab26e"
+                if v >= 30: return "#e0a030"
+                return "#e05050"
+
+            def needs_emoji(k, v):
+                icons = {"hunger": "🍖", "happiness": "😊", "energy": "⚡", "cleanliness": "🛁"}
+                if v < 20:
+                    sad = {"hunger": "😵", "happiness": "😢", "energy": "😴", "cleanliness": "🤢"}
+                    return sad[k]
+                return icons[k]
+
+            # Need bars
+            h = int(needs["hunger"]); ha = int(needs["happiness"])
+            e = int(needs["energy"]); c = int(needs["cleanliness"])
+
+            st.markdown(f"""
+            <div style='display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px'>
+                {"".join([
+                    f"""<div style='background:#161410;border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:16px'>
+                        <div style='display:flex;justify-content:space-between;margin-bottom:8px'>
+                            <span style='color:#aaa;font-size:13px;text-transform:uppercase;letter-spacing:1px'>
+                                {needs_emoji(k,v)} {k.title()}
+                            </span>
+                            <span style='color:{needs_color(v)};font-weight:600;font-size:13px'>{int(v)}/100</span>
+                        </div>
+                        <div style='background:#0a0a0a;border-radius:8px;height:10px;overflow:hidden'>
+                            <div style='width:{v}%;height:100%;background:{needs_color(v)};
+                                border-radius:8px;transition:width 0.4s'></div>
+                        </div>
+                    </div>"""
+                    for k, v in [("hunger", h), ("happiness", ha), ("energy", e), ("cleanliness", c)]
+                ])}
+            </div>
+            """, unsafe_allow_html=True)
+
+            # ── 3D THREE.JS PET SCENE ──────────────────────────────
+            # Map pet to a color palette for its 3D body
+            pet_colors = {
+                "Golden Kitty":   {"body": "#f5c842", "eye": "#222", "accent": "#e0a020"},
+                "Pearl Bunny":    {"body": "#f0eae0", "eye": "#ffb3c6", "accent": "#ddd0c8"},
+                "Sapphire Pup":   {"body": "#5b8dd9", "eye": "#1a1a6e", "accent": "#3a6abf"},
+                "Rose Parrot":    {"body": "#e8607a", "eye": "#222", "accent": "#c9a84c"},
+                "Velvet Fox":     {"body": "#c0623a", "eye": "#1a0a00", "accent": "#8b3a1a"},
+                "Crystal Deer":   {"body": "#b8e0f7", "eye": "#2255aa", "accent": "#7ec8e3"},
+                "Midnight Owl":   {"body": "#2a2040", "eye": "#f0c040", "accent": "#4a3870"},
+                "Aurora Dragon":  {"body": "#7b4fc4", "eye": "#00ffcc", "accent": "#c9a84c"},
+                "Diamond Unicorn":{"body": "#f0f8ff", "eye": "#c9a84c", "accent": "#e8c0ff"},
+            }
+            pc = pet_colors.get(playing, {"body": "#c9a84c", "eye": "#222", "accent": "#a08030"})
+
+            # Mood state for animation
+            mood = "happy" if ha >= 50 else ("sad" if ha < 25 else "neutral")
+            is_hungry = h < 30
+            is_sleepy = e < 25
+            is_dirty = c < 25
+
+            bubble_text = ""
+            if is_sleepy: bubble_text = "💤 Sleepy..."
+            elif is_hungry: bubble_text = "🍖 Hungry!"
+            elif is_dirty: bubble_text = "🛁 Need a bath!"
+            elif mood == "happy": bubble_text = "😊 So happy!"
+            elif mood == "sad": bubble_text = "😢 Play with me!"
+            else: bubble_text = "👋 Hello!"
+
+            three_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * {{ margin:0; padding:0; box-sizing:border-box; }}
+  body {{ background: linear-gradient(160deg,#0a0808,#130f0a); overflow:hidden; font-family:'Segoe UI',sans-serif; }}
+  #c {{ display:block; width:100%; height:420px; }}
+  #bubble {{
+    position:absolute; top:18px; left:50%; transform:translateX(-50%);
+    background:rgba(20,16,10,0.92); border:1.5px solid {pc['accent']};
+    border-radius:24px; padding:10px 22px; color:#f5f0e8;
+    font-size:15px; letter-spacing:0.5px; white-space:nowrap;
+    box-shadow:0 4px 24px rgba(0,0,0,0.5);
+    transition: opacity 0.4s;
+  }}
+  #ui {{
+    position:absolute; bottom:0; left:0; right:0;
+    background:linear-gradient(0deg,rgba(10,8,6,0.95),transparent);
+    padding:16px 24px 20px;
+    display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+  }}
+  .btn {{
+    background:linear-gradient(135deg,#1e1a12,#2a2218);
+    border:1px solid {pc['accent']}88;
+    color:#c9a84c; border-radius:30px;
+    padding:9px 22px; font-size:13px;
+    cursor:pointer; letter-spacing:1px; text-transform:uppercase;
+    transition:all 0.2s; font-weight:600;
+  }}
+  .btn:hover {{ background:{pc['accent']}22; border-color:{pc['accent']}; transform:translateY(-2px); }}
+  .btn:active {{ transform:scale(0.95); }}
+  #msg {{
+    position:absolute; top:60px; left:50%; transform:translateX(-50%);
+    color:#3ab26e; font-size:13px; font-weight:600; letter-spacing:1px;
+    opacity:0; transition:opacity 0.3s; white-space:nowrap;
+    text-shadow:0 0 10px #3ab26e88;
+  }}
+</style>
+</head>
+<body>
+<div id="bubble">{bubble_text}</div>
+<div id="msg"></div>
+<canvas id="c"></canvas>
+<div id="ui">
+  <button class="btn" onclick="doAction('feed')">🍖 Feed</button>
+  <button class="btn" onclick="doAction('play')">🎾 Play</button>
+  <button class="btn" onclick="doAction('sleep')">💤 Rest</button>
+  <button class="btn" onclick="doAction('bathe')">🛁 Bathe</button>
+  <button class="btn" onclick="doAction('pet')">✋ Pet</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const PET_NAME = "{playing}";
+const BODY_COLOR = "{pc['body']}";
+const EYE_COLOR  = "{pc['eye']}";
+const ACCENT     = "{pc['accent']}";
+const MOOD       = "{mood}";
+const IS_HUNGRY  = {'true' if is_hungry else 'false'};
+const IS_SLEEPY  = {'true' if is_sleepy else 'false'};
+
+// ── Scene setup ──────────────────────────────────────────────
+const canvas  = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({{canvas, antialias:true, alpha:true}});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+function resize() {{
+  const w = canvas.parentElement.clientWidth;
+  renderer.setSize(w, 420);
+  camera.aspect = w / 420;
+  camera.updateProjectionMatrix();
+}}
+
+const scene  = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0a0808, 8, 22);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(0, 2.2, 6);
+camera.lookAt(0, 0.8, 0);
+
+// ── Lights ──────────────────────────────────────────────────
+const ambient = new THREE.AmbientLight(0xfff5e0, 0.5);
+scene.add(ambient);
+
+const sun = new THREE.DirectionalLight(0xffe8b0, 1.4);
+sun.position.set(4, 8, 5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+scene.add(sun);
+
+const fill = new THREE.PointLight(parseInt(ACCENT.replace('#','0x')), 0.6, 12);
+fill.position.set(-3, 2, 2);
+scene.add(fill);
+
+const rimLight = new THREE.DirectionalLight(0x8888ff, 0.3);
+rimLight.position.set(-4, 3, -4);
+scene.add(rimLight);
+
+// ── Floor ───────────────────────────────────────────────────
+const floorGeo = new THREE.CircleGeometry(4, 64);
+const floorMat = new THREE.MeshStandardMaterial({{
+  color: 0x1a1410, roughness:0.9, metalness:0.05
+}});
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI/2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// Gold ring on floor
+const ringGeo = new THREE.RingGeometry(1.3, 1.45, 64);
+const ringMat = new THREE.MeshBasicMaterial({{color: parseInt(ACCENT.replace('#','0x')), side: THREE.DoubleSide}});
+const ring = new THREE.Mesh(ringGeo, ringMat);
+ring.rotation.x = -Math.PI/2;
+ring.position.y = 0.002;
+scene.add(ring);
+
+// ── Pet Materials ────────────────────────────────────────────
+const bodyMat  = new THREE.MeshStandardMaterial({{color: parseInt(BODY_COLOR.replace('#','0x')), roughness:0.5, metalness:0.08}});
+const accentMat= new THREE.MeshStandardMaterial({{color: parseInt(ACCENT.replace('#','0x')), roughness:0.4, metalness:0.3}});
+const eyeMat   = new THREE.MeshStandardMaterial({{color: parseInt(EYE_COLOR.replace('#','0x')), roughness:0.2, metalness:0.5, emissive: parseInt(EYE_COLOR.replace('#','0x')), emissiveIntensity:0.4}});
+const noseMat  = new THREE.MeshStandardMaterial({{color:0x1a1010, roughness:0.3}});
+const whiteMat = new THREE.MeshStandardMaterial({{color:0xffffff, roughness:0.3}});
+
+// Helper
+function mesh(geo, mat, cx,cy,cz, rx=0,ry=0,rz=0) {{
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(cx,cy,cz); m.rotation.set(rx,ry,rz);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}}
+
+// ── Build Pet ────────────────────────────────────────────────
+const pet = new THREE.Group();
+scene.add(pet);
+
+// Body
+const body = mesh(new THREE.SphereGeometry(0.72, 32, 32), bodyMat, 0, 0.75, 0);
+pet.add(body);
+
+// Belly spot
+const belly = mesh(new THREE.SphereGeometry(0.42, 24, 24), whiteMat, 0, 0.68, 0.52);
+belly.scale.set(1, 1.1, 0.5);
+pet.add(belly);
+
+// Head
+const head = mesh(new THREE.SphereGeometry(0.55, 32, 32), bodyMat, 0, 1.7, 0);
+pet.add(head);
+
+// Ears (left + right)
+const earGeo = new THREE.ConeGeometry(0.2, 0.5, 16);
+const earL = mesh(earGeo, bodyMat,  -0.35, 2.32, 0, 0,0,-0.3);
+const earR = mesh(earGeo, bodyMat,   0.35, 2.32, 0, 0,0, 0.3);
+const earInL= mesh(new THREE.ConeGeometry(0.1,0.3,12), accentMat, -0.35,2.3,0.06, 0,0,-0.3);
+const earInR= mesh(new THREE.ConeGeometry(0.1,0.3,12), accentMat,  0.35,2.3,0.06, 0,0, 0.3);
+pet.add(earL,earR,earInL,earInR);
+
+// Eyes
+const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
+const eyeL = mesh(eyeGeo, eyeMat, -0.2, 1.78, 0.46);
+const eyeR = mesh(eyeGeo, eyeMat,  0.2, 1.78, 0.46);
+// Eye shine
+const shineGeo = new THREE.SphereGeometry(0.035,8,8);
+const shineL = mesh(shineGeo, whiteMat, -0.17, 1.8, 0.54);
+const shineR = mesh(shineGeo, whiteMat,  0.23, 1.8, 0.54);
+pet.add(eyeL,eyeR,shineL,shineR);
+
+// Nose
+const nose = mesh(new THREE.SphereGeometry(0.07,12,12), noseMat, 0, 1.62, 0.52);
+nose.scale.set(1.2,0.8,0.8);
+pet.add(nose);
+
+// Mouth (tiny torus arc)
+const mouthGeo = new THREE.TorusGeometry(0.13, 0.025, 8, 20, Math.PI);
+const mouth = mesh(mouthGeo, noseMat, 0, 1.48, 0.5);
+// Flip based on mood
+if(MOOD === 'sad') mouth.rotation.set(Math.PI, 0, 0), mouth.position.y = 1.54;
+pet.add(mouth);
+
+// Tail
+const tailCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(0, 0.6, -0.6),
+  new THREE.Vector3(-0.4, 1.1, -0.9),
+  new THREE.Vector3(-0.6, 1.6, -0.5),
+]);
+const tailGeo = new THREE.TubeGeometry(tailCurve, 20, 0.09, 8, false);
+const tail = new THREE.Mesh(tailGeo, bodyMat);
+tail.castShadow = true;
+pet.add(tail);
+
+// Tail tip
+const tailTip = mesh(new THREE.SphereGeometry(0.15,12,12), accentMat, -0.6, 1.6, -0.5);
+pet.add(tailTip);
+
+// Front legs
+const legGeo = new THREE.CylinderGeometry(0.12, 0.1, 0.5, 14);
+const legL = mesh(legGeo, bodyMat, -0.32, 0.3, 0.42, 0.3,0,0);
+const legR = mesh(legGeo, bodyMat,  0.32, 0.3, 0.42, 0.3,0,0);
+pet.add(legL, legR);
+
+// Paws
+const pawGeo = new THREE.SphereGeometry(0.14, 12, 12);
+const pawL = mesh(pawGeo, accentMat, -0.38, 0.08, 0.6);
+const pawR = mesh(pawGeo, accentMat,  0.38, 0.08, 0.6);
+pet.add(pawL, pawR);
+
+// Back legs
+const blegL = mesh(legGeo, bodyMat, -0.38, 0.26, -0.35, -0.2,0,0.1);
+const blegR = mesh(legGeo, bodyMat,  0.38, 0.26, -0.35, -0.2,0,-0.1);
+pet.add(blegL, blegR);
+
+// Accent collar
+const collarGeo = new THREE.TorusGeometry(0.38, 0.055, 12, 40);
+const collar = new THREE.Mesh(collarGeo, accentMat);
+collar.position.set(0, 1.22, 0); collar.rotation.x = Math.PI/6;
+collar.castShadow = true;
+pet.add(collar);
+
+// ── Particles (sparkles around pet) ─────────────────────────
+const sparkles = [];
+for(let i=0;i<18;i++) {{
+  const sg = new THREE.SphereGeometry(0.025,6,6);
+  const sm = new THREE.MeshBasicMaterial({{color: parseInt(ACCENT.replace('#','0x')), transparent:true, opacity:0.8}});
+  const sp = new THREE.Mesh(sg, sm);
+  sp.userData = {{
+    angle: Math.random()*Math.PI*2,
+    radius: 1.1 + Math.random()*0.5,
+    speed:  0.4 + Math.random()*0.6,
+    yBase:  0.5 + Math.random()*1.5,
+    yAmp:   0.2 + Math.random()*0.3,
+    yPhase: Math.random()*Math.PI*2
+  }};
+  scene.add(sp);
+  sparkles.push(sp);
+}}
+
+// ── Action state ─────────────────────────────────────────────
+let anim = 'idle'; // idle | jump | spin | wave | sleep | shake
+let animT = 0;
+let jumpV = 0;
+let petY  = 0;
+let tailSwing = 0;
+let eyeBlinkT = 0;
+let msgTimer = 0;
+const msgEl = document.getElementById('msg');
+const bubbleEl = document.getElementById('bubble');
+
+const ACTION_MSGS = {{
+  feed:  ["Yum yum! 🍖", "So tasty!", "More please!"],
+  play:  ["Wheee! 🎾", "So fun!", "Catch me!"],
+  sleep: ["Zzz... 💤", "So cozy...", "Night night!"],
+  bathe: ["Splish splash! 🛁", "Squeaky clean!", "Ahh, fresh!"],
+  pet:   ["Purrrr... 💕", "*happy wiggle*", "Love you! 💖"]
+}};
+
+function showMsg(text) {{
+  msgEl.textContent = text;
+  msgEl.style.opacity = '1';
+  msgTimer = 2.2;
+}}
+
+function doAction(type) {{
+  anim = type === 'feed'  ? 'shake' :
+         type === 'play'  ? 'jump'  :
+         type === 'sleep' ? 'sleep' :
+         type === 'bathe' ? 'spin'  :
+         type === 'pet'   ? 'wave'  : 'idle';
+  animT = 0;
+  const msgs = ACTION_MSGS[type];
+  const txt = msgs[Math.floor(Math.random()*msgs.length)];
+  showMsg(txt);
+  bubbleEl.textContent = txt;
+  // Post to parent Streamlit
+  window.parent.postMessage({{type:'pet_action', action:type, pet:PET_NAME}}, '*');
+}}
+
+// ── Sleep Z particles ─────────────────────────────────────────
+const zMeshes = [];
+for(let i=0;i<3;i++) {{
+  const zg = new THREE.SphereGeometry(0.08,6,6);
+  const zm = new THREE.MeshBasicMaterial({{color:0xaaaacc,transparent:true,opacity:0}});
+  const zs = new THREE.Mesh(zg,zm);
+  scene.add(zs);
+  zs.userData = {{delay: i*0.8, life:0}};
+  zMeshes.push(zs);
+}}
+
+// ── Clock ─────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+
+function animate() {{
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const t  = clock.getElapsedTime();
+  animT += dt;
+
+  // ── Base idle bob ──────────────────────────────────────────
+  let bodyY = petY;
+  let bodyRot = 0;
+  let headTilt = 0;
+
+  if(anim === 'idle') {{
+    bodyY = Math.sin(t * 1.8) * 0.06;
+    tailSwing = Math.sin(t * 3) * 0.35;
+    headTilt  = Math.sin(t * 1.2) * 0.08;
+  }}
+
+  // ── Jump ──────────────────────────────────────────────────
+  if(anim === 'jump') {{
+    if(animT < 0.35) {{ petY += 4 * dt; jumpV = 4; }}
+    else {{ petY = Math.max(0, petY - 6*dt); }}
+    if(petY <= 0 && animT > 0.5) {{ petY = 0; if(animT > 1.2) anim='idle'; }}
+    bodyY = petY;
+    tailSwing = Math.sin(animT*10)*0.5;
+  }}
+
+  // ── Spin ──────────────────────────────────────────────────
+  if(anim === 'spin') {{
+    bodyRot = animT * 6;
+    tailSwing = 0.6;
+    if(animT > 1.5) {{ anim='idle'; pet.rotation.y=0; }}
+  }}
+
+  // ── Wave ──────────────────────────────────────────────────
+  if(anim === 'wave') {{
+    legL.rotation.z = Math.sin(animT*8)*0.8 - 0.5;
+    tailSwing = Math.sin(animT*5)*0.5;
+    if(animT>1.4) {{ legL.rotation.z=0; anim='idle'; }}
+  }}
+
+  // ── Shake ──────────────────────────────────────────────────
+  if(anim === 'shake') {{
+    pet.position.x = Math.sin(animT*20)*0.12;
+    tailSwing = Math.sin(animT*8)*0.5;
+    if(animT>0.8) {{ pet.position.x=0; anim='idle'; }}
+  }}
+
+  // ── Sleep ──────────────────────────────────────────────────
+  if(anim === 'sleep') {{
+    bodyY = Math.sin(animT*1.2)*0.05 - 0.1;
+    headTilt = -0.3;
+    eyeL.scale.y = 0.2; eyeR.scale.y = 0.2;
+    zMeshes.forEach((z,i) => {{
+      z.userData.life += dt;
+      const l = (z.userData.life - z.userData.delay);
+      if(l > 0) {{
+        z.position.set(-0.3+i*0.15, 2.1+l*0.5, 0.5);
+        z.material.opacity = Math.max(0, 0.8 - l*0.6);
+        z.scale.setScalar(1 + l*0.5);
+        if(l > 1.4) z.userData.life = z.userData.delay > 0 ? 0 : 0;
+      }}
+    }});
+    if(animT>2.2) {{
+      anim='idle';
+      eyeL.scale.y=1; eyeR.scale.y=1;
+      zMeshes.forEach(z=>{{ z.material.opacity=0; }});
+    }}
+  }}
+
+  // ── Apply transforms ──────────────────────────────────────
+  pet.position.y = bodyY;
+  if(anim==='spin') pet.rotation.y = bodyRot;
+  else if(anim!=='shake') pet.rotation.y = Math.sin(t*0.5)*0.12;
+
+  head.rotation.z = headTilt;
+  tail.rotation.y = tailSwing;
+  tailTip.position.x = -0.6 + Math.sin(tailSwing)*0.2;
+
+  // ── Eye blink ─────────────────────────────────────────────
+  eyeBlinkT -= dt;
+  if(eyeBlinkT <= 0) {{
+    eyeBlinkT = 2.5 + Math.random()*3;
+  }}
+  const blinkScale = eyeBlinkT < 0.12 ? 0.1 : 1;
+  if(anim !== 'sleep') {{ eyeL.scale.y = blinkScale; eyeR.scale.y = blinkScale; }}
+
+  // ── Sparkles ─────────────────────────────────────────────
+  sparkles.forEach(sp => {{
+    const d = sp.userData;
+    d.angle += d.speed * dt;
+    sp.position.set(
+      Math.cos(d.angle)*d.radius,
+      d.yBase + Math.sin(t*1.5 + d.yPhase)*d.yAmp,
+      Math.sin(d.angle)*d.radius
+    );
+    sp.material.opacity = 0.5 + 0.3*Math.sin(t*2+d.yPhase);
+  }});
+
+  // ── Message fade ─────────────────────────────────────────
+  if(msgTimer > 0) {{
+    msgTimer -= dt;
+    if(msgTimer <= 0) msgEl.style.opacity='0';
+  }}
+
+  renderer.render(scene, camera);
+}}
+
+window.addEventListener('resize', resize);
+resize();
+animate();
+</script>
+</body>
+</html>
+"""
+            # Render 3D scene
+            components.html(three_html, height=430, scrolling=False)
+
+            # Action buttons via Python (for Firebase save)
+            st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
+            action_cols = st.columns(5)
+            actions = [
+                ("feed",  "🍖 Feed",  "hunger",     25),
+                ("play",  "🎾 Play",  "happiness",  20),
+                ("sleep", "💤 Rest",  "energy",     30),
+                ("bathe", "🛁 Bathe", "cleanliness",25),
+                ("pet",   "✋ Pet",   "happiness",  10),
+            ]
+            needs_changed = False
+            for idx, (act, label, stat, boost) in enumerate(actions):
+                with action_cols[idx]:
+                    if st.button(label, key=f"act_{act}_{playing}"):
+                        needs[stat] = min(100, needs[stat] + boost)
+                        # small cross-effect
+                        if act == "play": needs["energy"] = max(0, needs["energy"] - 8)
+                        if act == "feed": needs["happiness"] = min(100, needs["happiness"] + 5)
+                        if act == "sleep": needs["happiness"] = min(100, needs["happiness"] + 5)
+                        pet_needs_all[playing] = needs
+                        needs_changed = True
+                        st.success(f"{label} — {stat.title()} +{boost}! ✨")
+
+            if needs_changed:
+                db.collection("owned_pets").document(shop_phone_verified).set({
+                    "phone": shop_phone_verified,
+                    "pets": owned_pets,
+                    "needs": pet_needs_all,
+                    "last_saved": time_module.time()
+                })
+                st.rerun()
+
+            if st.button("⬅ Back to My Pets", key="back_pets"):
+                st.session_state["playing_pet"] = None
+                st.rerun()
+
+        # ── PET ROSTER (not playing) ───────────────────────────────
+        else:
+            if owned_pets:
+                st.markdown("<h3 style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px;margin-bottom:16px'>🏡 Your Pets</h3>", unsafe_allow_html=True)
+                pet_cols = st.columns(min(len(owned_pets), 3))
+                for pi, pname in enumerate(owned_pets):
+                    pet_data = next((p for p in DIGITAL_PETS if p["name"] == pname), None)
+                    if not pet_data: continue
+                    rarity_color = RARITY_COLORS.get(pet_data["rarity"], "#888")
+                    needs = pet_needs_all.get(pname, {"hunger":80,"happiness":80,"energy":80,"cleanliness":80})
+
+                    # Save decayed needs back
+                    pet_needs_all[pname] = needs
+
+                    def bar(v, color):
+                        return f"<div style='background:#0a0a0a;border-radius:4px;height:6px;width:100%;margin:3px 0'><div style='width:{int(v)}%;height:6px;background:{color};border-radius:4px'></div></div>"
+
+                    nc = lambda v: "#3ab26e" if v>=60 else ("#e0a030" if v>=30 else "#e05050")
+
+                    with pet_cols[pi % 3]:
                         st.markdown(f"""
                         <div style='background:linear-gradient(145deg,#161410,#1e1a12);
-                            border:1px solid {rarity_color}44;border-radius:16px;padding:20px;
-                            text-align:center;margin-bottom:12px;'>
-                            <div style='font-size:52px;margin-bottom:8px'>{pet_data["emoji"]}</div>
-                            <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:18px'>{pet_data["name"]}</div>
-                            <div style='color:{rarity_color};font-size:11px;letter-spacing:1px;
-                                text-transform:uppercase;margin-top:4px'>✦ {pet_data["rarity"]} ✦</div>
+                            border:1px solid {rarity_color}55;border-radius:20px;padding:22px;
+                            text-align:center;margin-bottom:8px;'>
+                            <div style='font-size:56px;margin-bottom:10px'>{pet_data["emoji"]}</div>
+                            <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:20px;margin-bottom:4px'>{pname}</div>
+                            <div style='color:{rarity_color};font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px'>✦ {pet_data["rarity"]} ✦</div>
+                            <div style='text-align:left;font-size:11px;color:#777;letter-spacing:0.5px'>
+                                🍖 Hunger
+                                {bar(needs['hunger'], nc(needs['hunger']))}
+                                😊 Happiness
+                                {bar(needs['happiness'], nc(needs['happiness']))}
+                                ⚡ Energy
+                                {bar(needs['energy'], nc(needs['energy']))}
+                                🛁 Cleanliness
+                                {bar(needs['cleanliness'], nc(needs['cleanliness']))}
+                            </div>
                         </div>
                         """, unsafe_allow_html=True)
+                        if st.button(f"▶ Play with {pname}", key=f"play_{pi}"):
+                            # Save decayed needs before entering play
+                            db.collection("owned_pets").document(shop_phone_verified).set({
+                                "phone": shop_phone_verified,
+                                "pets": owned_pets,
+                                "needs": pet_needs_all,
+                                "last_saved": time_module.time()
+                            })
+                            st.session_state["playing_pet"] = pname
+                            st.rerun()
 
-        st.markdown("<h3 style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px;margin:24px 0 16px'>🛒 Available Pets</h3>", unsafe_allow_html=True)
+            # ── PET SHOP ──────────────────────────────────────────
+            st.markdown("<h3 style='font-family:Cormorant Garamond;color:#c9a84c;font-size:26px;margin:28px 0 16px'>🛒 Adopt a Pet</h3>", unsafe_allow_html=True)
 
-        pet_cols = st.columns(3)
-        for pi, pet in enumerate(DIGITAL_PETS):
-            rarity_color = RARITY_COLORS.get(pet["rarity"], "#888")
-            already_owned = pet["name"] in owned_pets
-            can_afford = current_points >= pet["cost"]
+            pet_cols = st.columns(3)
+            for pi, pet in enumerate(DIGITAL_PETS):
+                rarity_color = RARITY_COLORS.get(pet["rarity"], "#888")
+                already_owned = pet["name"] in owned_pets
+                can_afford = current_points >= pet["cost"]
 
-            with pet_cols[pi % 3]:
-                st.markdown(f"""
-                <div style='background:linear-gradient(145deg,#161410,#1e1a12);
-                    border:1px solid {rarity_color}55;border-radius:20px;padding:24px;
-                    text-align:center;margin-bottom:8px;
-                    {"opacity:0.5;" if already_owned else ""}'>
-                    <div style='font-size:60px;margin-bottom:10px'>{pet["emoji"]}</div>
-                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:22px;margin-bottom:4px'>
-                        {pet["name"]}
+                with pet_cols[pi % 3]:
+                    st.markdown(f"""
+                    <div style='background:linear-gradient(145deg,#161410,#1e1a12);
+                        border:1px solid {rarity_color}55;border-radius:20px;padding:24px;
+                        text-align:center;margin-bottom:8px;
+                        {"opacity:0.45;" if already_owned else ""}'>
+                        <div style='font-size:60px;margin-bottom:10px'>{pet["emoji"]}</div>
+                        <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:22px;margin-bottom:4px'>{pet["name"]}</div>
+                        <div style='color:{rarity_color};font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px'>✦ {pet["rarity"]} ✦</div>
+                        <div style='color:#888;font-size:13px;line-height:1.5;margin-bottom:14px'>{pet["description"]}</div>
+                        <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:28px;font-weight:600'>{pet["cost"]} pts</div>
+                        {"<div style='color:#3ab26e;font-size:12px;margin-top:8px;letter-spacing:1px'>✅ OWNED</div>" if already_owned else ""}
+                        {"<div style='color:#555;font-size:12px;margin-top:8px'>Not enough points</div>" if not can_afford and not already_owned else ""}
                     </div>
-                    <div style='color:{rarity_color};font-size:11px;letter-spacing:2px;
-                        text-transform:uppercase;margin-bottom:10px'>✦ {pet["rarity"]} ✦</div>
-                    <div style='color:#888;font-size:13px;line-height:1.5;margin-bottom:14px'>
-                        {pet["description"]}
-                    </div>
-                    <div style='font-family:Cormorant Garamond;color:#c9a84c;font-size:28px;font-weight:600'>
-                        {pet["cost"]} pts
-                    </div>
-                    {"<div style='color:#3ab26e;font-size:12px;margin-top:8px;letter-spacing:1px'>✅ OWNED</div>" if already_owned else ""}
-                    {"<div style='color:#555;font-size:12px;margin-top:8px'>Not enough points</div>" if not can_afford and not already_owned else ""}
-                </div>
-                """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
 
-                if not already_owned:
-                    if st.button(
-                        f"🐾 Adopt {pet['name']}",
-                        key=f"adopt_{pi}",
-                        disabled=not can_afford
-                    ):
-                        # Deduct points
-                        new_points = current_points - pet["cost"]
-                        loyalty_ref.set({
-                            "customer_name": customer_name,
-                            "phone": shop_phone_verified,
-                            "points": new_points
-                        })
-                        # Save owned pet
-                        new_owned = owned_pets + [pet["name"]]
-                        db.collection("owned_pets").document(shop_phone_verified).set({
-                            "phone": shop_phone_verified,
-                            "pets": new_owned
-                        })
-                        st.success(f"🎉 You adopted {pet['emoji']} {pet['name']}! Enjoy your new companion!")
-                        st.rerun()
+                    if not already_owned:
+                        if st.button(f"🐾 Adopt", key=f"adopt_{pi}", disabled=not can_afford):
+                            new_points = current_points - pet["cost"]
+                            loyalty_ref.set({
+                                "customer_name": customer_name,
+                                "phone": shop_phone_verified,
+                                "points": new_points
+                            })
+                            new_owned = owned_pets + [pet["name"]]
+                            pet_needs_all[pet["name"]] = {"hunger":80,"happiness":80,"energy":80,"cleanliness":80}
+                            db.collection("owned_pets").document(shop_phone_verified).set({
+                                "phone": shop_phone_verified,
+                                "pets": new_owned,
+                                "needs": pet_needs_all,
+                                "last_saved": time_module.time()
+                            })
+                            st.success(f"🎉 You adopted {pet['emoji']} {pet['name']}!")
+                            st.rerun()
 
 # ======================================================
 # WORKER LOGIN
